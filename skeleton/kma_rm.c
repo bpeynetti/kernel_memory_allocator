@@ -47,6 +47,7 @@
 /************System include***********************************************/
 #include <assert.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 /************Private include**********************************************/
 #include "kma_page.h"
@@ -90,12 +91,17 @@ blocklist *usedList = NULL;
 
 /************Function Prototypes******************************************/
 void addToUsed(kma_size_t size, void* address);
+void printLists(bool choose);
+
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
 
 void* kma_malloc(kma_size_t size)
 {
+    printf("Printing list of free nodes \n");
+    printLists(TRUE);
+    
     void* address;
     kma_page_t* page;
     
@@ -176,17 +182,21 @@ void* kma_malloc(kma_size_t size)
     
     
   //never gets here
+ 
   return NULL;
 }
 
 void kma_free(void* ptr, kma_size_t size)
 {
+    printf("Printing list of used nodes \n");
+    printLists(FALSE);
+    
     blocklist* current = usedList;
     blocklist* previous = NULL;
     blocklist* temp = NULL;
     //now step through checking the address
     //when found, switch that node over from the used to the free list
-    
+    void* address = ptr;
     while (current != NULL){
         if (current->ptr==address){
             //found, so move it to the free list
@@ -214,7 +224,7 @@ void kma_free(void* ptr, kma_size_t size)
 }
 
 
-void addToUsed(size, address) 
+void addToUsed(kma_size_t size, void* address) 
 {
     if (usedList == NULL){
         //then nothing in the list. add it to the list
@@ -227,7 +237,7 @@ void addToUsed(size, address)
     else 
     {
         //already some list, so add it to  the end of the list
-        
+        blocklist* newNode;
         //create a new node to store the stuff
         newNode = malloc(sizeof(blocklist));
         newNode->ptr = address;
@@ -240,13 +250,20 @@ void addToUsed(size, address)
     }
 }
 
-void printLists(listHead){
-    blocklist* current = listHead;
+void printLists(bool choose){
+    blocklist* current = NULL;
+    if (choose==TRUE){
+        current = freeList;
+    }
+    else{
+        current = usedList;
+    }
     int id=0;
     while(current!=NULL){
         printf("block %d with size: %d \n ",id,current->size);
         id++;
     }
+    printf("end of list\n");
 }
 
 
