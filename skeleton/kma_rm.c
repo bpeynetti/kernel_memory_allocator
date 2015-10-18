@@ -262,6 +262,7 @@ void printLists(bool choose){
     while(current!=NULL){
         printf("block %d with size: %d \n ",id,current->size);
         id++;
+        current = current->next;
     }
     printf("end of list\n");
 }
