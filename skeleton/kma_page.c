@@ -82,8 +82,7 @@ void initPages();
 
 /**************Implementation***********************************************/
 
-kma_page_t*
-get_page()
+kma_page_t* get_page()
 {
   static int id = 0;
   kma_page_t* res;
@@ -101,8 +100,7 @@ get_page()
   return res;	
 }
 
-void
-free_page(kma_page_t* ptr)
+void free_page(kma_page_t* ptr)
 {
   assert(ptr != NULL);
   assert(ptr->ptr != NULL);
@@ -115,16 +113,14 @@ free_page(kma_page_t* ptr)
   free(ptr);
 }
 
-kma_page_stat_t*
-page_stats()
+kma_page_stat_t* page_stats()
 {
   static kma_page_stat_t stats;
   
   return memcpy(&stats, &kma_page_stats, sizeof(kma_page_stat_t));
 }
 
-void*
-allocPage()
+void* allocPage()
 {
   void* res;
   
@@ -147,8 +143,7 @@ allocPage()
   return res;
 }
 
-void
-freePage(void* ptr)
+void freePage(void* ptr)
 {
   assert(ptr != NULL);
   
@@ -163,8 +158,7 @@ freePage(void* ptr)
     }
 }
 
-void
-initPages()
+void initPages()
 {
   int i;
   

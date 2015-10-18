@@ -58,25 +58,196 @@
  *  variables should be in all lower case. When initializing
  *  structures and arrays, line everything up in neat columns.
  */
+enum BLOCK_STATE
+  {
+    FREE,
+    USED
+  };
+  
+typedef struct block_list
+{
+  int size;
+  void* ptr;
+  void* next;
+ // void* previous;
+  //enum BLOCK_STATE state;
+  
+} blocklist;
+
+// free list pointer
+blocklist *freeList = NULL;
+
+// busy list pointer
+blocklist *usedList = NULL;
+
+// 
 
 /************Global Variables*********************************************/
 
-/************Function Prototypes******************************************/
+//define a pointer kma_struct_t that points to the beginning of everything
 
+
+
+/************Function Prototypes******************************************/
+void addToUsed(kma_size_t size, void* address);
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
 
-void*
-kma_malloc(kma_size_t size)
+void* kma_malloc(kma_size_t size)
 {
+    void* address;
+    kma_page_t* page;
+    
+    //empty, so get a new page
+    if (freeList == NULL){
+        //get page
+        page = get_page();
+        
+        //get size needed from the page and allocate that (add to used list)
+        freeList = malloc(sizeof(blocklist));
+        
+        freeList-> ptr = page->ptr + sizeof(kma_page_t*) + size;
+        freeList-> size = page->size - sizeof(kma_page_t*) - size;
+        freeList-> next = NULL;
+        //add the remainder as a node to the list of free space
+        
+        address = page->ptr+sizeof(kma_page_t*);
+        
+        //add to used list: size and ptr
+        addToUsed(size, address);
+        
+        return address;
+        
+    }
+    
+    else
+    {
+        
+        blocklist* nextFree = freeList;
+        blocklist* previousFree = NULL;
+        while (nextFree != NULL)
+        {
+            if (nextFree->size >= size)
+            {
+                address = nextFree->ptr;
+                if (nextFree->size == size)
+                {
+                    if (previousFree == NULL)
+                    {
+                        freeList = nextFree->next;
+                    }
+                    else
+                    {
+                        previousFree->next = nextFree->next;
+                    }
+                    //delete the node 
+                    free(nextFree);
+                }
+                else
+                {
+                    nextFree->size = nextFree->size - size;
+                    nextFree->ptr =address + size;
+                }
+                addToUsed(size,address);
+                return address;
+            }
+            previousFree = nextFree;
+            nextFree = nextFree-> next;
+        }
+        
+        page = get_page();
+        
+        blocklist* newPageFreeBlock = malloc(sizeof(blocklist));
+        
+        newPageFreeBlock->ptr = page->ptr + sizeof(kma_page_t*) + size;
+        newPageFreeBlock->size = page->size - sizeof(kma_page_t*) - size;
+        newPageFreeBlock->next = freeList;
+        freeList = newPageFreeBlock;
+        
+        address = page->ptr + sizeof(kma_page_t*);
+        
+        addToUsed(size, address);
+        
+        return address;
+        
+    }
+    
+    
+    
+  //never gets here
   return NULL;
 }
 
-void
-kma_free(void* ptr, kma_size_t size)
+void kma_free(void* ptr, kma_size_t size)
 {
-  ;
+    blocklist* current = usedList;
+    blocklist* previous = NULL;
+    blocklist* temp = NULL;
+    //now step through checking the address
+    //when found, switch that node over from the used to the free list
+    
+    while (current != NULL){
+        if (current->ptr==address){
+            //found, so move it to the free list
+            temp = current;
+            
+            if (previous!=NULL){
+                //link previous to the next one
+                previous->next = temp->next;
+            }
+            
+            //and add the temp to the start of the free list
+            temp->next = freeList;
+            freeList = temp;
+            return;
+        }
+        else {
+            //just step to the next one
+            previous = current;
+            current = current->next;
+        }
+    }
+    //should never get here
+    printf("Error -> address to free is not in the list of used blocks\n");
+    
 }
+
+
+void addToUsed(size, address) 
+{
+    if (usedList == NULL){
+        //then nothing in the list. add it to the list
+        usedList = malloc(sizeof(blocklist));
+        usedList->ptr = address;
+        usedList->size = size;
+        usedList->next = NULL;
+        
+    }
+    else 
+    {
+        //already some list, so add it to  the end of the list
+        
+        //create a new node to store the stuff
+        newNode = malloc(sizeof(blocklist));
+        newNode->ptr = address;
+        newNode->size = size;
+        newNode->next = usedList;
+        
+        //and make it the beginning of the list
+        usedList = newNode;
+        
+    }
+}
+
+void printLists(listHead){
+    blocklist* current = listHead;
+    int id=0;
+    while(current!=NULL){
+        printf("block %d with size: %d \n ",id,current->size);
+        id++;
+    }
+}
+
 
 #endif // KMA_RM
