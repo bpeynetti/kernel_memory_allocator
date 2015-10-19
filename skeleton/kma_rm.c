@@ -65,23 +65,33 @@ enum BLOCK_STATE
     USED
   };
   
-typedef struct block_list
+typedef struct block_node
 {
   int size;
   void* ptr;
   void* next;
+  int pageId;
  // void* previous;
   //enum BLOCK_STATE state;
   
-} blocklist;
+} blocknode;
+
+typedef struct page_node
+{
+    int id;
+    kma_page_t* ptr;
+    int counter;
+    void* next;
+} pagenode;
 
 // free list pointer
-blocklist *freeList = NULL;
+blocknode *freeList = NULL;
 
 // busy list pointer
-blocklist *usedList = NULL;
+blocknode *usedList = NULL;
 
-// 
+// free page list
+pagenode *pageList = NULL;
 
 /************Global Variables*********************************************/
 
@@ -90,8 +100,14 @@ blocklist *usedList = NULL;
 
 
 /************Function Prototypes******************************************/
-void addToUsed(kma_size_t size, void* address);
+void addToUsed(kma_size_t size, void* address,int pageId);
+void addPageToList(kma_page_t* page);
 void printLists(bool choose);
+void freeMyPage(pagenode* page);
+pagenode* changePageCounter(int pageid, int delta);
+void printPageList();
+
+
 
 /************External Declaration*****************************************/
 
@@ -99,8 +115,12 @@ void printLists(bool choose);
 
 void* kma_malloc(kma_size_t size)
 {
-    printf("Printing list of free nodes \n");
-    printLists(TRUE);
+    //printf("ADDING A BLOCK OF SIZE %d\n",size);
+
+    //printf("\t\tPrinting list of used nodes \n");
+    //printLists(FALSE);
+    //printf("\t\tPrinting list of free nodes \n");
+    //printLists(TRUE);
     
     void* address;
     kma_page_t* page;
@@ -109,19 +129,21 @@ void* kma_malloc(kma_size_t size)
     if (freeList == NULL){
         //get page
         page = get_page();
+        addPageToList(page);
         
         //get size needed from the page and allocate that (add to used list)
-        freeList = malloc(sizeof(blocklist));
+        freeList = malloc(sizeof(blocknode));
         
         freeList-> ptr = page->ptr + sizeof(kma_page_t*) + size;
         freeList-> size = page->size - sizeof(kma_page_t*) - size;
         freeList-> next = NULL;
+        freeList->pageId = page->id;
         //add the remainder as a node to the list of free space
         
         address = page->ptr+sizeof(kma_page_t*);
         
         //add to used list: size and ptr
-        addToUsed(size, address);
+        addToUsed(size, address,page->id);
         
         return address;
         
@@ -130,8 +152,8 @@ void* kma_malloc(kma_size_t size)
     else
     {
         
-        blocklist* nextFree = freeList;
-        blocklist* previousFree = NULL;
+        blocknode* nextFree = freeList;
+        blocknode* previousFree = NULL;
         while (nextFree != NULL)
         {
             if (nextFree->size >= size)
@@ -155,7 +177,7 @@ void* kma_malloc(kma_size_t size)
                     nextFree->size = nextFree->size - size;
                     nextFree->ptr =address + size;
                 }
-                addToUsed(size,address);
+                addToUsed(size,address,nextFree->pageId);
                 return address;
             }
             previousFree = nextFree;
@@ -163,17 +185,22 @@ void* kma_malloc(kma_size_t size)
         }
         
         page = get_page();
+        printf("Adding new page %d \n",page->id);
+        addPageToList(page);
+        printPageList();
+
         
-        blocklist* newPageFreeBlock = malloc(sizeof(blocklist));
+        blocknode* newPageFreeBlock = malloc(sizeof(blocknode));
         
         newPageFreeBlock->ptr = page->ptr + sizeof(kma_page_t*) + size;
         newPageFreeBlock->size = page->size - sizeof(kma_page_t*) - size;
         newPageFreeBlock->next = freeList;
+        newPageFreeBlock->pageId = page->id;
         freeList = newPageFreeBlock;
         
         address = page->ptr + sizeof(kma_page_t*);
         
-        addToUsed(size, address);
+        addToUsed(size, address,page->id);
         
         return address;
         
@@ -188,28 +215,40 @@ void* kma_malloc(kma_size_t size)
 
 void kma_free(void* ptr, kma_size_t size)
 {
-    printf("Printing list of used nodes \n");
-    printLists(FALSE);
+    //printf("FREEING A BLOCK OF SIZE %d\n",size);
+    pagenode* pageNode;
+
+    //printf("\t\tPrinting list of used nodes \n");
+    //printLists(FALSE);
+    //printf("\t\tPrinting list of free nodes \n");
+    //printLists(TRUE);
     
-    blocklist* current = usedList;
-    blocklist* previous = NULL;
-    blocklist* temp = NULL;
+    blocknode* current = usedList;
+    blocknode* previous = NULL;
     //now step through checking the address
     //when found, switch that node over from the used to the free list
     void* address = ptr;
     while (current != NULL){
         if (current->ptr==address){
             //found, so move it to the free list
-            temp = current;
-            
+
             if (previous!=NULL){
                 //link previous to the next one
-                previous->next = temp->next;
+                previous->next = current->next;
+            }
+            else{
+                usedList = current->next;
             }
             
             //and add the temp to the start of the free list
-            temp->next = freeList;
-            freeList = temp;
+            current->next = freeList;
+            freeList = current;
+            
+            //decrease from number of blocks in the pagenode
+            pageNode = changePageCounter(current->pageId,-1);
+            if (pageNode->counter==0){
+                  freeMyPage(pageNode);
+            }
             return;
         }
         else {
@@ -224,34 +263,26 @@ void kma_free(void* ptr, kma_size_t size)
 }
 
 
-void addToUsed(kma_size_t size, void* address) 
+void addToUsed(kma_size_t size, void* address,int pageId) 
 {
-    if (usedList == NULL){
-        //then nothing in the list. add it to the list
-        usedList = malloc(sizeof(blocklist));
-        usedList->ptr = address;
-        usedList->size = size;
-        usedList->next = NULL;
+    blocknode* newNode;
+    newNode = malloc(sizeof(blocknode));
+    newNode->ptr = address;
+    newNode->size = size;
+    newNode->next = usedList;
+    newNode->pageId = pageId;
+    usedList=newNode;
+    
+    pagenode* Page;
+    Page = changePageCounter(newNode->pageId,1);
+    if (Page==NULL){
         
     }
-    else 
-    {
-        //already some list, so add it to  the end of the list
-        blocklist* newNode;
-        //create a new node to store the stuff
-        newNode = malloc(sizeof(blocklist));
-        newNode->ptr = address;
-        newNode->size = size;
-        newNode->next = usedList;
-        
-        //and make it the beginning of the list
-        usedList = newNode;
-        
-    }
+    
 }
 
 void printLists(bool choose){
-    blocklist* current = NULL;
+    blocknode* current = NULL;
     if (choose==TRUE){
         current = freeList;
     }
@@ -260,11 +291,100 @@ void printLists(bool choose){
     }
     int id=0;
     while(current!=NULL){
-        printf("block %d with size: %d \n ",id,current->size);
+        printf("\t\tblock %d in page %d with size: %d \n ",id,current->pageId,current->size);
         id++;
         current = current->next;
     }
-    printf("end of list\n");
+    printf("end of list --------   \n");
+}
+
+void addPageToList(kma_page_t* page)
+{
+    pagenode* newPage;
+    newPage = malloc(sizeof(pagenode));
+    newPage->id = page->id;
+    newPage->ptr = page;
+    newPage->counter = 0;
+    newPage->next = pageList;
+    
+    pageList = newPage;
+}
+
+pagenode* changePageCounter(int pageid, int delta)
+{
+    pagenode* current = pageList;
+    while (current != NULL)
+    {
+        if (current->id == pageid)
+        {
+            current->counter += delta;
+            return current;
+        }
+        current = current->next;
+    }
+    return NULL;
+}
+
+void freeMyPage(pagenode* page)
+{
+    printf("Freeing page %d \n",page->id);
+    blocknode* currentFreeNode = freeList;
+    blocknode* previousFreeNode = NULL;
+    //first delete all nodes from free list
+    while (currentFreeNode != NULL)
+    {
+        if (currentFreeNode->pageId == page->id)
+        //get rid of node from free list
+        {
+            if (previousFreeNode == NULL)
+            {
+                freeList = currentFreeNode->next;
+            }
+            else
+            {
+                previousFreeNode->next = currentFreeNode->next;
+            }
+            free(currentFreeNode);
+            break;
+
+        }
+        previousFreeNode = currentFreeNode;
+        currentFreeNode = currentFreeNode->next;
+    }
+    //now delete the node from the list of page nodes
+    pagenode* currentPageNode = pageList;
+    pagenode* previousPageNode = NULL;
+    
+    while (currentPageNode != NULL)
+    {
+        if (currentPageNode->id == page->id)
+        {
+            if (previousPageNode == NULL)
+            {
+                pageList = currentPageNode->next;
+            }
+            else
+            {
+                previousPageNode->next = currentPageNode->next;
+            }
+            free(currentPageNode);
+            break;
+        }
+        previousPageNode = currentPageNode;
+        currentPageNode = currentPageNode->next;
+    }
+    free_page(page->ptr);
+    printPageList();
+}
+
+void printPageList()
+{
+    pagenode* current = pageList;
+    while (current!=NULL){
+        printf("%d -> ",current->id);
+        current = current->next;
+    }
+    printf("\n");
 }
 
 
