@@ -112,15 +112,19 @@ void printPageList();
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
-
+int requests = 0;
 void* kma_malloc(kma_size_t size)
 {
-    //printf("ADDING A BLOCK OF SIZE %d\n",size);
+    requests++;
+    printf("%d\n",requests);
+    //printf("ADDING A BLOCK number %d\n",requests);
 
     //printf("\t\tPrinting list of used nodes \n");
     //printLists(FALSE);
-    //printf("\t\tPrinting list of free nodes \n");
-    //printLists(TRUE);
+    if (requests>1950){
+        printf("\t\tPrinting list of free nodes \n");
+        printLists(TRUE);
+    }
     
     void* address;
     kma_page_t* page;
@@ -185,7 +189,7 @@ void* kma_malloc(kma_size_t size)
         }
         
         page = get_page();
-        printf("Adding new page %d \n",page->id);
+        printf("Adding new page %d , request %d for size %d \n",page->id,requests,size);
         addPageToList(page);
         printPageList();
 
@@ -215,6 +219,7 @@ void* kma_malloc(kma_size_t size)
 
 void kma_free(void* ptr, kma_size_t size)
 {
+    requests++;
     //printf("FREEING A BLOCK OF SIZE %d\n",size);
     pagenode* pageNode;
 
@@ -327,7 +332,7 @@ pagenode* changePageCounter(int pageid, int delta)
 
 void freeMyPage(pagenode* page)
 {
-    printf("Freeing page %d \n",page->id);
+    printf("Freeing page %d %d \n",page->id,requests);
     blocknode* currentFreeNode = freeList;
     blocknode* previousFreeNode = NULL;
     //first delete all nodes from free list
