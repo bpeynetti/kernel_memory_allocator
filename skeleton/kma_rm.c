@@ -460,18 +460,18 @@ void addToList(void* ptr,kma_size_t size)
     }
     while (current!=NULL)
     {
-        while (current>(currentPage+PAGE_SIZE))
-        {
-            currentPage = currentPage->next;
-        }
-        if (current>ptr)
+        // while (current>((void*)((int)currentPage+PAGE_SIZE)))
+        // {
+        //     currentPage = currentPage->next;
+        // }
+        if ((void*)current>ptr)
         {
             //stepped over, now we have previous and next
             //link them 
             newBlock->size = size;
             newBlock->next = previous->next;
             previous->next = newBlock;
-
+            return;
         }
         current = current->next;
     }
