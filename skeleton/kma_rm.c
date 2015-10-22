@@ -161,7 +161,7 @@ void* kma_malloc(kma_size_t size)
         listHead->size = PAGE_SIZE  - sizeof(pageheader)  - size;
         listHead->next = NULL;
         
-        return pageHead->ptr + sizeof(pageheader);
+        return globalPtr->ptr + sizeof(pageheader);
     }
     
    void* returnAddress;
