@@ -297,7 +297,8 @@ void* findFreeBlock(kma_size_t size)
                     //you're at the beginning of your list and the list is more than one
                     //you know it's big enough so just change its size and change the location of the header
                     tempNext = current->next;
-                    current = current+size;
+                                            current = (void*)((int)(current)+size);
+
                     current->size = oldSize - size;
                     //and copy pointer to next
                     current->next = tempNext;
@@ -326,7 +327,8 @@ void* findFreeBlock(kma_size_t size)
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
-                        current = current+size;
+                                                current = (void*)((int)(current)+size);
+
                         //and replicate the size from the old size - size
                         current->size = oldSize - size;
                         current->next = NULL;
@@ -359,7 +361,8 @@ void* findFreeBlock(kma_size_t size)
                         //block is too big, so allocate new smaller block 
                         //copy over (shift the free node)
                         tempNext = current->next;
-                        current = current+size;
+                                                current = (void*)((int)(current)+size);
+
                         current->size = oldSize - size;
                         current->next = tempNext;
                         currentPage->counter++;
