@@ -143,6 +143,8 @@ void* kma_malloc(kma_size_t size)
         //put it in the first place 
         *((kma_page_t**)globalPtr->ptr) = globalPtr;
         
+        printf("global is at %p \n",globalPtr);
+        
         //create the page header
         pageheader* pageHead;
         //and set the location (address) of the head to the beginning of the page
@@ -235,6 +237,8 @@ void* findFreeBlock(kma_size_t size)
         {
             returnAddr = current;
             oldSize = current->size;
+            
+            printf("return address at %p \n",returnAddr);
             // take out of linked list
             //if head of the blocks
             if (previous==NULL)
