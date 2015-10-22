@@ -470,7 +470,6 @@ void addToList(void* ptr,kma_size_t size)
             //stepped over, now we have previous and next
             //link them 
             printf("\t Found a place to add the block. \n");
-            printf("")
             newBlock->size = size;
             newBlock->next = previous->next;
             previous->next = newBlock;
