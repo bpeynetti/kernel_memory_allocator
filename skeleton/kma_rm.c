@@ -123,7 +123,7 @@ void* kma_malloc(kma_size_t size)
         printf("First page: %p",firstPage);
 	printf("that page points to %p \n",firstPage->ptr);
 	//firstPage->ptr = (kma_page_t*)firstPage;    
-    blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+   	 blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
         while (currentBlock != NULL)
         {
             printf("%d->", currentBlock->size);
@@ -191,7 +191,7 @@ void* kma_malloc(kma_size_t size)
         }
         return returnAddress;
     }
-    
+	printf("\n\n\n ********************* GETTING NEW PAGE **** \n");    
     pageheader* currentPage = (pageheader*) (globalPtr->ptr);
     
     while (currentPage->next != NULL)
@@ -200,9 +200,9 @@ void* kma_malloc(kma_size_t size)
     }
     
     kma_page_t* pageTemp = get_page();
-    
+    printf("PageTemp kma_struct_t* at  %p\n",pageTemp);
     *((kma_page_t**)pageTemp->ptr) = pageTemp;
-
+    kma_page_t* localPtr = pageTemp;
     
     pageheader* newPageHead;
     newPageHead = (pageheader*) (pageTemp->ptr);
@@ -217,7 +217,10 @@ void* kma_malloc(kma_size_t size)
     
     blockheader* currentBlock;
     currentBlock = (blockheader*)(newPageHead->blockHead);
-    
+   
+    printf("New page starts at %p\n",newPageHead);
+    printf("New page points to %p\n",newPageHead->ptr);
+ 
     while (currentBlock->next != NULL)
     {
         currentBlock = currentBlock->next;
@@ -431,6 +434,7 @@ void kma_free(void* ptr, kma_size_t size)
             //if the pointer is between the addresses of the next two pages
             if (ptr > (void*)(currentPage) && ptr < (void*)(nextPage))
             {
+		printf("Page %p counter %d, decrement 1 \n",currentPage,currentPage->counter);
                 currentPage->counter--;
                 break;
             }
@@ -485,7 +489,7 @@ void addToList(void* ptr,kma_size_t size)
     }
     while (current!=NULL)
     {
-        printf("\tWe are at free node %p of size %d and pointing to %p \n",current,current->size,current->next);
+       // printf("\tWe are at free node %p of size %d and pointing to %p \n",current,current->size,current->next);
         // while (current>((void*)((int)currentPage+PAGE_SIZE)))
         // {
         //     currentPage = currentPage->next;
