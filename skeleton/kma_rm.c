@@ -59,44 +59,41 @@
  *  variables should be in all lower case. When initializing
  *  structures and arrays, line everything up in neat columns.
  */
-enum BLOCK_STATE
-  {
-    FREE,
-    USED
-  };
+#define PAGE_SIZE 8192
+
   
-typedef struct block_node
+typedef struct block_head
 {
   int size;
-  void* ptr;
+  //void* ptr;
   void* next;
-  int pageId;
+  //kma_page_t* pagePtr;
  // void* previous;
   //enum BLOCK_STATE state;
-  
-} blocknode;
+} blockheader;
 
-typedef struct page_node
+typedef struct page_header
 {
-    int id;
+    //int id;
     kma_page_t* ptr;
     int counter;
-    void* next;
-} pagenode;
+    kma_page_t* next;
+    blockheader* blockHead;
+} pageheader;
 
 // free list pointer
-blocknode *freeList = NULL;
+// blocknode *freeList = NULL;
 
 // busy list pointer
-blocknode *usedList = NULL;
+// blocknode *usedList = NULL;
 
 // free page list
-pagenode *pageList = NULL;
+// pagenode *pageList = NULL;
 
 /************Global Variables*********************************************/
 
 //define a pointer kma_struct_t that points to the beginning of everything
-
+kma_page_t* globalPtr = NULL;
 
 
 /************Function Prototypes******************************************/
@@ -113,112 +110,321 @@ void printPageList();
 
 /**************Implementation***********************************************/
 int requests = 0;
+int maxPages = 0;
+int currentPages = 0;
+
 void* kma_malloc(kma_size_t size)
 {
-    requests++;
-    printf("%d\n",requests);
-    //printf("ADDING A BLOCK number %d\n",requests);
-
-    //printf("\t\tPrinting list of used nodes \n");
-    //printLists(FALSE);
-    if (requests>1950){
-        printf("\t\tPrinting list of free nodes \n");
-        printLists(TRUE);
-    }
     
-    void* address;
-    kma_page_t* page;
-    
-    //empty, so get a new page
-    if (freeList == NULL){
-        //get page
-        page = get_page();
-        addPageToList(page);
-        
-        //get size needed from the page and allocate that (add to used list)
-        freeList = malloc(sizeof(blocknode));
-        
-        freeList-> ptr = page->ptr + sizeof(kma_page_t*) + size;
-        freeList-> size = page->size - sizeof(kma_page_t*) - size;
-        freeList-> next = NULL;
-        freeList->pageId = page->id;
-        //add the remainder as a node to the list of free space
-        
-        address = page->ptr+sizeof(kma_page_t*);
-        
-        //add to used list: size and ptr
-        addToUsed(size, address,page->id);
-        
-        return address;
-        
-    }
-    
-    else
+    printf("Allocating a new block of memory of size %d\n", size);
+    if (globalPtr != NULL)
     {
-        
-        blocknode* nextFree = freeList;
-        blocknode* previousFree = NULL;
-        while (nextFree != NULL)
+        printf("    ");
+        pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+        blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+        while (currentBlock != NULL)
         {
-            if (nextFree->size >= size)
-            {
-                address = nextFree->ptr;
-                if (nextFree->size == size)
-                {
-                    if (previousFree == NULL)
-                    {
-                        freeList = nextFree->next;
-                    }
-                    else
-                    {
-                        previousFree->next = nextFree->next;
-                    }
-                    //delete the node 
-                    free(nextFree);
-                }
-                else
-                {
-                    nextFree->size = nextFree->size - size;
-                    nextFree->ptr =address + size;
-                }
-                addToUsed(size,address,nextFree->pageId);
-                return address;
-            }
-            previousFree = nextFree;
-            nextFree = nextFree-> next;
+            printf("%d->", currentBlock->size);
         }
-        
-        page = get_page();
-        printf("Adding new page %d , request %d for size %d \n",page->id,requests,size);
-        addPageToList(page);
-        printPageList();
-
-        
-        blocknode* newPageFreeBlock = malloc(sizeof(blocknode));
-        
-        newPageFreeBlock->ptr = page->ptr + sizeof(kma_page_t*) + size;
-        newPageFreeBlock->size = page->size - sizeof(kma_page_t*) - size;
-        newPageFreeBlock->next = freeList;
-        newPageFreeBlock->pageId = page->id;
-        freeList = newPageFreeBlock;
-        
-        address = page->ptr + sizeof(kma_page_t*);
-        
-        addToUsed(size, address,page->id);
-        
-        return address;
-        
+        printf("\n");
     }
     
     
     
-  //never gets here
- 
-  return NULL;
+    //ignore requests for more size than a page
+    if(size + sizeof(void*)>PAGESIZE) return NULL;
+    
+    if (globalPtr==NULL)
+    {
+        //initialize everything    
+        //get a new page, put it to global ptr
+        globalPtr = get_page();
+
+        //put it in the first place 
+        *((kma_page_t**)globalPtr->ptr) = globalPtr;
+        
+        //create the page header
+        pageheader* pageHead;
+        //and set the location (address) of the head to the beginning of the page
+        pageHead = (pageheader*) (globalPtr->ptr);
+        pageHead->ptr = globalPtr;
+        pageHead->counter = 1;
+        pageHead->next = NULL;
+        pageHead->blockHead = globalPtr->ptr + sizeof(pageheader) + size;
+        
+        blockheader* listHead;
+        listHead = (blockheader*)(pageHead->blockHead);
+        listHead->size = PAGE_SIZE  - sizeof(pageheader)  - size;
+        listHead->next = NULL;
+        
+        return pageHead->ptr + sizeof(pageheader);
+    }
+    
+   void* returnAddress;
+   
+    returnAddress = findFreeBlock(size);
+    
+    if (returnAddress!= NULL)
+    {
+        return returnAddress;
+    }
+    
+    pageheader* currentPage = (pageheader*) (globalPtr->ptr);
+    
+    while (currentPage->next != NULL)
+    {
+        currentPage = currentPage->next;
+    }
+    
+    currentPage->next = get_page();
+    
+    *((kma_page_t**)currentPage->next->ptr) = currentPage->next;
+    
+    pageheader* newPageHead;
+    newPageHead = (pageheader*) (currentPage->next->ptr);
+    newPageHead->ptr = currentPage->next->ptr;
+    newPageHead->counter = 1;
+    newPageHead->next = NULL;
+    pageheader* firstPageHead = (pageheader*) (globalPtr->ptr);
+    newPageHead->blockHead = firstPageHead->blockHead;
+    
+    blockheader* currentBlock;
+    currentBlock = (blockheader*)(newPageHead->blockHead);
+    
+    while (currentBlock->next != NULL)
+    {
+        currentBlock = currentBlock->next;
+    }
+    
+    blockheader* newBlock = (blockheader*)(newPageHead->ptr + sizeof(pageheader) + size);
+    newBlock->size = PAGE_SIZE - sizeof(pageheader) - size;
+    newBlock->next = NULL;
+    
+    currentBlock->next = newBlock;
+    
+    return findFreeBlock(size);
 }
+
+void* findFreeBlock(kma_size_t size)
+{
+    //if there's a list of stuff, look through it and find first fit 
+    blockheader* previous = NULL;
+    pageheader* pageHead;
+    //it's at the beginning of the list. make it point to the first free node
+    pageHead = (pageheader*) (globalPtr->ptr);
+    blockheader* current = pageHead->blockHead;
+    
+    pageheader* currentPage = pageHead;
+    blockhead* returnAddr = NULL;
+    
+    kma_size_t oldSize;
+    blockheader* tempNext;
+
+    while (current!=NULL)
+    {
+        while (current>(currentPage+PAGE_SIZE))
+        {
+            currentPage = currentPage->next;
+        }
+        //now go through the list and find a free block
+        if (current->size >= size)
+        {
+            returnAddr = current;
+            oldSize = current->size;
+            // take out of linked list
+            //if head of the blocks
+            if (previous==NULL)
+            {
+
+                //change the ptr to the next free block
+                if (current->next==NULL){
+                    //only one block!
+                    
+                    //if there is no space for the new block and at least a header for a new block
+                    if ((currentPage+PAGE_SIZE-(current))<(size+sizeof(blockheader))
+                    {
+                        //not enough space in the last free block, return null
+                        return NULL;
+                    }
+                    else 
+                    {
+                        //enough space, so split the block 
+                        //figure out the previous address and size 
+                        //figure out the location for the next block
+                        current = current+size;
+                        //and replicate the size from the old size - size
+                        current->size = oldSize - size;
+                        current->next = NULL;
+                        
+                        //update the head of list to this one
+                        currentPage->blockHead = current;
+                        
+                        currentPage->counter++;
+                        //and return the old address 
+                        return returnAddr;
+                    }
+                }
+                else 
+                {
+                    //you're at the beginning of your list and the list is more than one
+                    //you know it's big enough so just change its size and change the location of the header
+                    tempNext = current->next;
+                    current = current+size;
+                    current->size = oldSize - size;
+                    //and copy pointer to next
+                    current->next = tempNext;
+                    //no previous one so update header
+                    currentPage->blockHead = current;
+                    //add one to page counter
+                    currentPage->counter++;
+                    //nothing else to update
+                    return returnAddr;
+                }
+            }
+            else 
+            {
+                //not at the head
+                //if you're at the tail
+                if (current->next==NULL)
+                {
+                    //add one node to the end 
+                     if ((currentPage+PAGE_SIZE-(current))<(size+sizeof(blockheader))
+                    {
+                        //not enough space in the last free block, return null
+                        return NULL;
+                    }
+                    else 
+                    {
+                        //enough space, so split the block 
+                        //figure out the previous address and size 
+                        //figure out the location for the next block
+                        current = current+size;
+                        //and replicate the size from the old size - size
+                        current->size = oldSize - size;
+                        current->next = NULL;
+                        
+                        //update the previous next to this one
+                        previous->next = current;
+                        
+                        currentPage->counter++;
+                        //and return the old address 
+                        return returnAddr;
+                    }
+                }
+                else 
+                {
+                    //normal case, something in front and something behind
+                    returnAddr = current;
+                    //if size of block is within accepted  to size+sizeof(blocknode)
+                    if (current->size-size<=sizeof(blocknode)) //if the difference between them is smaller than what we need for a new node
+                    {
+                        //you lose a few things to fragmentation
+                        
+                        //take it out of the list
+                        previous->next = current->next;
+                        //and add 1 more
+                        currentPage->counter++;
+                        return returnAddr;
+                    }
+                    else 
+                    {
+                        //block is too big, so allocate new smaller block 
+                        //copy over (shift the free node)
+                        tempNext = current->next;
+                        current = current+size;
+                        current->size = oldSize - size;
+                        current->next = tempNext;
+                        currentPage->counter++;
+                        
+                        previous->next = current;
+                        return returnAddr;
+                    }
+                }
+            }
+        }
+        else 
+        {
+            //block is not good. step through
+            previous = current;
+            current = current->next;
+        }
+    }
+    return NULL; //no block found
+}
+
 
 void kma_free(void* ptr, kma_size_t size)
 {
+    
+    
+    printf("Freeing a block of memory of size %d\n", size);
+    if (globalPtr != NULL)
+    {
+        printf("    ");
+        pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+        blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+        while (currentBlock != NULL)
+        {
+            printf("%d->", currentBlock->size);
+        }
+        printf("\n");
+    }
+    
+    //first need to add the requested memory location to the free list
+    addToList(ptr,size);
+    
+    //then need to find the page the freed block belongs to and decrement counter for that page
+    pageheader* currentPage = (pageheader*) (globalPtr->ptr);
+    pageheader* nextPage = currentPage->next;
+    
+    //the pointer specified is in the first page
+    if (ptr < (void*)(currentPage+PAGE_SIZE))
+    {
+        currentPage->counter--;
+    }
+    
+    //the pointer specified is not in the first page
+    else
+    {
+        while (nextPage != NULL)
+        {
+            //if the pointer is between the addresses of the next two pages
+            if (ptr > (void*)(currentPage) && ptr < (void*)(nextPage))
+            {
+                currentPage->counter--;
+                break;
+            }
+        
+            currentPage = currentPage->next;
+            nextPage = nextPage->next;
+        }
+        
+        //if you make it this far and are at the end of the list, the pointer is in the last page
+        if (nextPage == NULL)
+        {
+            currentPage->counter--;
+        }
+        
+    }
+    
+    
+    //then, if the counter has reached 0, free the page
+    if (currentPage->counter==0)
+    {
+        freeMyPage(currentPage);
+    }
+    
+    return;
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    //OLD CODE!!!!!
     requests++;
     //printf("FREEING A BLOCK OF SIZE %d\n",size);
     pagenode* pageNode;
@@ -268,119 +474,144 @@ void kma_free(void* ptr, kma_size_t size)
 }
 
 
-void addToUsed(kma_size_t size, void* address,int pageId) 
+void addToList(void* ptr,kma_size_t size)
 {
-    blocknode* newNode;
-    newNode = malloc(sizeof(blocknode));
-    newNode->ptr = address;
-    newNode->size = size;
-    newNode->next = usedList;
-    newNode->pageId = pageId;
-    usedList=newNode;
+    blockheader* previous = NULL;
+    pageheader* pageHead;
+    //it's at the beginning of the list. make it point to the first free node
+    pageHead = (pageheader*) (globalPtr->ptr);
+    blockheader* current = pageHead->blockHead;
+    pageheader* currentPage = pageHead;
+    blockheader* newBlock;
+
+    newBlock = (blockheader*) ptr;  
     
-    pagenode* Page;
-    Page = changePageCounter(newNode->pageId,1);
-    if (Page==NULL){
+    if (ptr<current)
+    {
+        //check if the next one is adjacent and free
+        //if yes, merge them 
         
+        //no
+        newBlock->size = size;
+        newBlock->next = current;
+        pageHead->blockhead = newBlock;
+        
+        return;   
     }
-    
-}
-
-void printLists(bool choose){
-    blocknode* current = NULL;
-    if (choose==TRUE){
-        current = freeList;
-    }
-    else{
-        current = usedList;
-    }
-    int id=0;
-    while(current!=NULL){
-        printf("\t\tblock %d in page %d with size: %d \n ",id,current->pageId,current->size);
-        id++;
-        current = current->next;
-    }
-    printf("end of list --------   \n");
-}
-
-void addPageToList(kma_page_t* page)
-{
-    pagenode* newPage;
-    newPage = malloc(sizeof(pagenode));
-    newPage->id = page->id;
-    newPage->ptr = page;
-    newPage->counter = 0;
-    newPage->next = pageList;
-    
-    pageList = newPage;
-}
-
-pagenode* changePageCounter(int pageid, int delta)
-{
-    pagenode* current = pageList;
-    while (current != NULL)
+    while (current!=NULL)
     {
-        if (current->id == pageid)
+        while (current>(currentPage+PAGE_SIZE))
         {
-            current->counter += delta;
-            return current;
+            currentPage = currentPage->next;
         }
-        current = current->next;
-    }
-    return NULL;
-}
-
-void freeMyPage(pagenode* page)
-{
-    printf("Freeing page %d %d \n",page->id,requests);
-    blocknode* currentFreeNode = freeList;
-    blocknode* previousFreeNode = NULL;
-    //first delete all nodes from free list
-    while (currentFreeNode != NULL)
-    {
-        if (currentFreeNode->pageId == page->id)
-        //get rid of node from free list
+        if (current>ptr)
         {
-            if (previousFreeNode == NULL)
-            {
-                freeList = currentFreeNode->next;
-            }
-            else
-            {
-                previousFreeNode->next = currentFreeNode->next;
-            }
-            free(currentFreeNode);
-            break;
+            //stepped over, now we have previous and next
+            //link them 
+            newBlock->size = size;
+            newBlock->next = previous->next;
+            previous->next = newBlock;
 
         }
-        previousFreeNode = currentFreeNode;
-        currentFreeNode = currentFreeNode->next;
     }
-    //now delete the node from the list of page nodes
-    pagenode* currentPageNode = pageList;
-    pagenode* previousPageNode = NULL;
-    
-    while (currentPageNode != NULL)
-    {
-        if (currentPageNode->id == page->id)
-        {
-            if (previousPageNode == NULL)
-            {
-                pageList = currentPageNode->next;
-            }
-            else
-            {
-                previousPageNode->next = currentPageNode->next;
-            }
-            free(currentPageNode);
-            break;
-        }
-        previousPageNode = currentPageNode;
-        currentPageNode = currentPageNode->next;
-    }
-    free_page(page->ptr);
-    printPageList();
+    //if you reached the end of the list
+    //add it to the end (previous is the tail now)
+    newBlock->size = size;
+    newBlock->next = NULL;
+    previous->next = newBlock;
+
 }
+
+
+
+
+
+void freeMyPage(pageheader* page)
+{
+    currentPage = (pageheader*) (globalPtr->ptr);
+
+    blockheader* previous = NULL;
+    blockheader* current = pageHead->blockHead;
+
+    pageheader* currentPage;
+    //it's at the beginning of the list. make it point to the first free node
+    pageheader* previousPage = NULL;
+    
+    //
+    // if it's the first one to free
+    if (page==currentPage)
+    {
+        //if no more pages
+        if (currentPage->next==NULL)
+        {
+            //you're done!
+            free_page((*kma_page_t)page);
+            return;
+        }
+        else
+        {
+            //find the first node in a next page
+            while (((void*)current < ((void*)page+PAGE_SIZE)) && (current!=NULL))
+            {
+                current = current->next;
+            }
+
+            //current has the new first node
+            //and new first page is next page
+            *((kma_page_t**)globalPtr->ptr) = page->next;
+            page->next->blockHead = current;
+            free_page((*kma_page_t)page);
+            return;
+        }
+    }
+    else 
+    {
+        //not the first page
+        //find the previous page
+        pageheader* tempPage = (pageheader*)globaPtr->ptr;
+        while (tempPage<page)
+        {
+            previousPage = tempPage;
+            tempPage = tempPage->next;
+        }
+        
+        if (page->next==NULL)
+        {
+            //the last one
+            while ((void*)current<(void*)page)
+            {
+                //step through until you find the first block in the page
+                previous = current;
+                current = current->next;
+            }
+            //now set next from there to null
+            previous->next = NULL;
+            //free the page
+            free_page((*kma_page_t)page);
+            return;
+            
+        }
+        pageheader* nextPage = page->next;
+        previousPage->next = nextPage;
+        while((void*)current < ((void*)page+PAGE_SIZE))
+        {
+            if ((void*)current < (void*)page)
+            {
+                //update previous
+                previous = current;
+            }
+            //update current
+            current = current->next;
+        }
+        previous->next = current;
+        free_page((*kma_page_t)page);
+        return;
+    }
+    
+ //shouldn't get here at all
+ free_page((*kma_page_t)page);
+}
+
 
 void printPageList()
 {
