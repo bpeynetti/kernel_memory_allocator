@@ -97,13 +97,12 @@ kma_page_t* globalPtr = NULL;
 
 
 /************Function Prototypes******************************************/
-void addToUsed(kma_size_t size, void* address,int pageId);
-void addPageToList(kma_page_t* page);
-void printLists(bool choose);
-void freeMyPage(pagenode* page);
-pagenode* changePageCounter(int pageid, int delta);
+void* kma_malloc(kma_size_t size);
+void* findFreeBlock(kma_size_t size);
+void kma_free(void* ptr, kma_size_t size);
+void addToList(void* ptr,kma_size_t size);
+void freeMyPage(pageheader* page);
 void printPageList();
-
 
 
 /************External Declaration*****************************************/
@@ -215,7 +214,7 @@ void* findFreeBlock(kma_size_t size)
     blockheader* current = pageHead->blockHead;
     
     pageheader* currentPage = pageHead;
-    blockhead* returnAddr = NULL;
+    blockheader* returnAddr = NULL;
     
     kma_size_t oldSize;
     blockheader* tempNext;
@@ -241,10 +240,10 @@ void* findFreeBlock(kma_size_t size)
                     //only one block!
                     
                     //if there is no space for the new block and at least a header for a new block
-                    if ((currentPage+PAGE_SIZE-(current))<(size+sizeof(blockheader))
+                    if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
                     {
                         //not enough space in the last free block, return null
-                        return NULL;
+                        return (void*)NULL;
                     }
                     else 
                     {
@@ -261,7 +260,7 @@ void* findFreeBlock(kma_size_t size)
                         
                         currentPage->counter++;
                         //and return the old address 
-                        return returnAddr;
+                        return (void*)returnAddr;
                     }
                 }
                 else 
@@ -278,7 +277,7 @@ void* findFreeBlock(kma_size_t size)
                     //add one to page counter
                     currentPage->counter++;
                     //nothing else to update
-                    return returnAddr;
+                    return (void*)returnAddr;
                 }
             }
             else 
@@ -288,10 +287,10 @@ void* findFreeBlock(kma_size_t size)
                 if (current->next==NULL)
                 {
                     //add one node to the end 
-                     if ((currentPage+PAGE_SIZE-(current))<(size+sizeof(blockheader))
+                    if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
                     {
                         //not enough space in the last free block, return null
-                        return NULL;
+                        return (void*)NULL;
                     }
                     else 
                     {
@@ -308,7 +307,7 @@ void* findFreeBlock(kma_size_t size)
                         
                         currentPage->counter++;
                         //and return the old address 
-                        return returnAddr;
+                        return (void*)returnAddr;
                     }
                 }
                 else 
@@ -316,7 +315,7 @@ void* findFreeBlock(kma_size_t size)
                     //normal case, something in front and something behind
                     returnAddr = current;
                     //if size of block is within accepted  to size+sizeof(blocknode)
-                    if (current->size-size<=sizeof(blocknode)) //if the difference between them is smaller than what we need for a new node
+                    if (current->size-size<=sizeof(blockheader)) //if the difference between them is smaller than what we need for a new node
                     {
                         //you lose a few things to fragmentation
                         
@@ -324,7 +323,7 @@ void* findFreeBlock(kma_size_t size)
                         previous->next = current->next;
                         //and add 1 more
                         currentPage->counter++;
-                        return returnAddr;
+                        return (void*)returnAddr;
                     }
                     else 
                     {
@@ -337,7 +336,7 @@ void* findFreeBlock(kma_size_t size)
                         currentPage->counter++;
                         
                         previous->next = current;
-                        return returnAddr;
+                        return (void*)returnAddr;
                     }
                 }
             }
@@ -349,9 +348,8 @@ void* findFreeBlock(kma_size_t size)
             current = current->next;
         }
     }
-    return NULL; //no block found
+    return (void*)NULL; //no block found
 }
-
 
 void kma_free(void* ptr, kma_size_t size)
 {
@@ -439,7 +437,7 @@ void addToList(void* ptr,kma_size_t size)
         //no
         newBlock->size = size;
         newBlock->next = current;
-        pageHead->blockhead = newBlock;
+        pageHead->blockHead = newBlock;
         
         return;   
     }
@@ -467,20 +465,17 @@ void addToList(void* ptr,kma_size_t size)
 
 }
 
-
-
-
-
 void freeMyPage(pageheader* page)
 {
+    pageheader* currentPage;
+    pageheader* previousPage = NULL;
+
     currentPage = (pageheader*) (globalPtr->ptr);
 
     blockheader* previous = NULL;
     blockheader* current = pageHead->blockHead;
 
-    pageheader* currentPage;
     //it's at the beginning of the list. make it point to the first free node
-    pageheader* previousPage = NULL;
     
     //
     // if it's the first one to free
@@ -490,7 +485,7 @@ void freeMyPage(pageheader* page)
         if (currentPage->next==NULL)
         {
             //you're done!
-            free_page((*kma_page_t)page);
+            free_page((kma_page_t*)page);
             return;
         }
         else
@@ -505,7 +500,7 @@ void freeMyPage(pageheader* page)
             //and new first page is next page
             *((kma_page_t**)globalPtr->ptr) = page->next;
             page->next->blockHead = current;
-            free_page((*kma_page_t)page);
+            free_page((kma_page_t*)page);
             return;
         }
     }
@@ -513,7 +508,7 @@ void freeMyPage(pageheader* page)
     {
         //not the first page
         //find the previous page
-        pageheader* tempPage = (pageheader*)globaPtr->ptr;
+        pageheader* tempPage = (pageheader*)globalPtr->ptr;
         while (tempPage<page)
         {
             previousPage = tempPage;
@@ -532,7 +527,7 @@ void freeMyPage(pageheader* page)
             //now set next from there to null
             previous->next = NULL;
             //free the page
-            free_page((*kma_page_t)page);
+            free_page((kma_page_t*)page);
             return;
             
         }
@@ -549,23 +544,12 @@ void freeMyPage(pageheader* page)
             current = current->next;
         }
         previous->next = current;
-        free_page((*kma_page_t)page);
+        free_page((kma_page_t*)page);
         return;
     }
     
  //shouldn't get here at all
- free_page((*kma_page_t)page);
-}
-
-
-void printPageList()
-{
-    pagenode* current = pageList;
-    while (current!=NULL){
-        printf("%d -> ",current->id);
-        current = current->next;
-    }
-    printf("\n");
+ free_page((kma_page_t*)page);
 }
 
 
