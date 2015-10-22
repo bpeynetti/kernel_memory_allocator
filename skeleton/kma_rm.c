@@ -182,7 +182,7 @@ void* kma_malloc(kma_size_t size)
     
     pageheader* newPageHead;
     newPageHead = (pageheader*) (pageTemp->ptr);
-    newPageHead->ptr = currentPage->next->ptr;
+    newPageHead->ptr = pageTemp;
     newPageHead->counter = 1;
     newPageHead->next = NULL;
     
@@ -502,7 +502,9 @@ void freeMyPage(pageheader* page)
 
             //current has the new first node
             //and new first page is next page
-            *((kma_page_t**)globalPtr->ptr) = page->next;
+            //*((kma_page_t**)globalPtr->ptr) = page->next;
+            globalPtr = (kma_page_t*)page->next;
+            
             page->next->blockHead = current;
             free_page((kma_page_t*)page);
             return;
