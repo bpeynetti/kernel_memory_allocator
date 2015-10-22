@@ -77,7 +77,7 @@ typedef struct page_header
     //int id;
     kma_page_t* ptr;
     int counter;
-    pageheader* next;
+    void* next;
     blockheader* blockHead;
 } pageheader;
 
