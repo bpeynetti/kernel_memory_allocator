@@ -280,6 +280,11 @@ void* findFreeBlock(kma_size_t size)
                 if (current->next==NULL){
                     //only one block!
                     
+			if (current->size - size < 8)
+			{
+				//need to skip remaining block
+				pageHead->blockHead = NULL;
+			}
                     //if there is no space for the new block and at least a header for a new block
                     // if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
                     // {
@@ -291,16 +296,20 @@ void* findFreeBlock(kma_size_t size)
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
-                        printf("Current pointer: %p\n", current);
-                        current = (void*)((int)(current)+size);
-                        printf("Current pointer: %p\n", current);
-                        //and replicate the size from the old size - size
-                        current->size = oldSize - size;
-                        current->next = NULL;
+
+			else
+			{
+
+	                        printf("Current pointer: %p\n", current);
+        	                current = (void*)((int)(current)+size);
+                	        printf("Current pointer: %p\n", current);
+                      	 	   //and replicate the size from the old size - size
+                    	 	   current->size = oldSize - size;
+                       		 current->next = NULL;
                         
-                        //update the head of list to this one
-                        currentPage->blockHead = current;
-                        
+                       		 //update the head of list to this one
+                       		 currentPage->blockHead = current;
+                        }
                         currentPage->counter++;
                         //and return the old address 
                         return (void*)returnAddr;
@@ -310,15 +319,23 @@ void* findFreeBlock(kma_size_t size)
                 {
                     //you're at the beginning of your list and the list is more than one
                     //you know it's big enough so just change its size and change the location of the header
-                    tempNext = current->next;
+                   
+		    if (current->size - size < 8)
+		    {
+			 pageHead->blockHead = current->next;
+		    }
+		    else
+		    {
+			 tempNext = current->next;
                                             current = (void*)((int)(current)+size);
 
-                    current->size = oldSize - size;
-                    //and copy pointer to next
-                    current->next = tempNext;
-                    //no previous one so update header
-                    currentPage->blockHead = current;
-                    //add one to page counter
+                   	 current->size = oldSize - size;
+                  	  //and copy pointer to next
+                  	  current->next = tempNext;
+                   	 //no previous one so update header
+                   	 currentPage->blockHead = current;
+                   	 //add one to page counter
+		    }
                     currentPage->counter++;
                     //nothing else to update
                     return (void*)returnAddr;
@@ -330,14 +347,20 @@ void* findFreeBlock(kma_size_t size)
                 //if you're at the tail
                 if (current->next==NULL)
                 {
-                    //add one node to the end 
-                    // if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
-                    // {
-                    //     //not enough space in the last free block, return null
-                    //     return (void*)NULL;
-                    // }
-                    // else 
-                    // {
+		    if (current->size - size < 8)
+		    {
+			previous->next = NULL;
+		    }
+		    else
+		    {
+                   	 //add one node to the end 
+                    	// if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
+                  	  // {
+                   	 //     //not enough space in the last free block, return null
+                   	 //     return (void*)NULL;
+                   	 // }
+                   	 // else 
+                   	 // {
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
@@ -349,10 +372,10 @@ void* findFreeBlock(kma_size_t size)
                         
                         //update the previous next to this one
                         previous->next = current;
-                        
-                        currentPage->counter++;
-                        //and return the old address 
-                        return (void*)returnAddr;
+                   }     
+                    currentPage->counter++;
+                    //and return the old address 
+                    return (void*)returnAddr;
                     // }
                 }
                 else 
@@ -360,7 +383,7 @@ void* findFreeBlock(kma_size_t size)
                     //normal case, something in front and something behind
                     returnAddr = current;
                     //if size of block is within accepted  to size+sizeof(blocknode)
-                    if (current->size-size<=sizeof(blockheader)) //if the difference between them is smaller than what we need for a new node
+                    if (current->size-size<sizeof(blockheader)) //if the difference between them is smaller than what we need for a new node
                     {
                         //you lose a few things to fragmentation
                         
