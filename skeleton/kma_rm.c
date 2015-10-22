@@ -77,7 +77,7 @@ typedef struct page_header
     //int id;
     kma_page_t* ptr;
     int counter;
-    kma_page_t* next;
+    page_header* next;
     blockheader* blockHead;
 } pageheader;
 
@@ -240,13 +240,13 @@ void* findFreeBlock(kma_size_t size)
                     //only one block!
                     
                     //if there is no space for the new block and at least a header for a new block
-                    if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
-                    {
-                        //not enough space in the last free block, return null
-                        return (void*)NULL;
-                    }
-                    else 
-                    {
+                    // if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
+                    // {
+                    //     //not enough space in the last free block, return null
+                    //     return (void*)NULL;
+                    // }
+                    // else 
+                    // {
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
@@ -261,7 +261,7 @@ void* findFreeBlock(kma_size_t size)
                         currentPage->counter++;
                         //and return the old address 
                         return (void*)returnAddr;
-                    }
+                    // }
                 }
                 else 
                 {
@@ -287,13 +287,13 @@ void* findFreeBlock(kma_size_t size)
                 if (current->next==NULL)
                 {
                     //add one node to the end 
-                    if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
-                    {
-                        //not enough space in the last free block, return null
-                        return (void*)NULL;
-                    }
-                    else 
-                    {
+                    // if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
+                    // {
+                    //     //not enough space in the last free block, return null
+                    //     return (void*)NULL;
+                    // }
+                    // else 
+                    // {
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
@@ -308,7 +308,7 @@ void* findFreeBlock(kma_size_t size)
                         currentPage->counter++;
                         //and return the old address 
                         return (void*)returnAddr;
-                    }
+                    // }
                 }
                 else 
                 {
@@ -473,7 +473,7 @@ void freeMyPage(pageheader* page)
     currentPage = (pageheader*) (globalPtr->ptr);
 
     blockheader* previous = NULL;
-    blockheader* current = pageHead->blockHead;
+    blockheader* current = currentPage->blockHead;
 
     //it's at the beginning of the list. make it point to the first free node
     
