@@ -226,11 +226,12 @@ void* kma_malloc(kma_size_t size)
         currentBlock = currentBlock->next;
     }
     
-    blockheader* newBlock = (blockheader*)(newPageHead->ptr + sizeof(pageheader) + size);
-    newBlock->size = PAGE_SIZE - sizeof(pageheader) - size;
+    blockheader* newBlock = (blockheader*)((int)newPageHead + sizeof(pageheader));
+    newBlock->size = PAGE_SIZE - sizeof(pageheader);
     newBlock->next = NULL;
     
     currentBlock->next = newBlock;
+    printf("newBlock address is %p and size %d\n",newBlock,newBlock->size);
     
     return findFreeBlock(size);
 }
