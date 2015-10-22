@@ -170,6 +170,19 @@ void* kma_malloc(kma_size_t size)
     
     if (returnAddress!= NULL)
     {
+        printf("ALLOCATED a new block of memory of size %d\n", size);
+        if (globalPtr != NULL)
+        {
+            printf("    ");
+            pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+            blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+            while (currentBlock != NULL)
+            {
+                printf("%d->", currentBlock->size);
+                currentBlock = currentBlock->next;
+            }
+          printf("\n");
+        }
         return returnAddress;
     }
     
