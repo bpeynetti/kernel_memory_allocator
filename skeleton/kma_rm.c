@@ -120,7 +120,9 @@ void* kma_malloc(kma_size_t size)
     {
         printf("    ");
         pageheader* firstPage = (pageheader*) (globalPtr->ptr);
-        blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+        printf("First page: %p",firstPage);
+	firstPage->ptr = (kma_page_t*)firstPage;    
+    blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
         while (currentBlock != NULL)
         {
             printf("%d->", currentBlock->size);
@@ -392,10 +394,12 @@ void kma_free(void* ptr, kma_size_t size)
     {
         printf("    ");
         pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+	printf("first page at %p\n",firstPage);
         blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
-        while (currentBlock != NULL)
+        printf("First free block of size %d at %p and points to %p \n",currentBlock->size,currentBlock,currentBlock->next);
+	while (currentBlock != NULL)
         {
-            printf("%d->", currentBlock->size);
+            printf("%d-> (%p)", currentBlock->size,currentBlock->next);
             currentBlock = currentBlock->next;
         }
         printf("\n");
@@ -411,7 +415,8 @@ void kma_free(void* ptr, kma_size_t size)
     //the pointer specified is in the first page
     if (ptr < (void*)(currentPage+PAGE_SIZE))
     {
-        currentPage->counter--;
+        printf("First page counter is %d and decrement by 1 \n",currentPage->counter);
+	currentPage->counter--;
     }
     
     //the pointer specified is not in the first page
@@ -461,14 +466,14 @@ void addToList(void* ptr,kma_size_t size)
     blockheader* newBlock;
 
     newBlock = (blockheader*) ptr;  
-    
+    newBlock->size = size; 
     if (ptr<current)
     {
         //check if the next one is adjacent and free
         //if yes, merge them 
         
         //no
-        newBlock->size = size;
+      //  newBlock->size = size;
         newBlock->next = current;
         pageHead->blockHead = newBlock;
         
@@ -476,7 +481,7 @@ void addToList(void* ptr,kma_size_t size)
     }
     while (current!=NULL)
     {
-        printf("\tWe are at free node %p of size %d\n",current,current->size);
+        printf("\tWe are at free node %p of size %d and pointing to %p \n",current,current->size,current->next);
         // while (current>((void*)((int)currentPage+PAGE_SIZE)))
         // {
         //     currentPage = currentPage->next;
@@ -486,13 +491,18 @@ void addToList(void* ptr,kma_size_t size)
             //stepped over, now we have previous and next
             //link them 
             printf("\t Found a place to add the block. \n");
-            newBlock->size = size;
-            newBlock->next = previous->next;
+            //size done before
+		//just connect the previous to this one
+		//and this one to the next one
+            newBlock->next = current;
             previous->next = newBlock;
+	    printf("Node at %p with size %d pointing to it is  %p (%p) and from this, next is %p",newBlock,newBlock->size,previous,previous->next,newBlock->next);
             return;
         }
         previous = current;
-        current = current->next;
+        //current = current->next;
+	printf("Next to look at is %p\n",previous->next);
+	current = previous->next;
     }
     //if you reached the end of the list
     //add it to the end (previous is the tail now)
@@ -505,6 +515,7 @@ void addToList(void* ptr,kma_size_t size)
 
 void freeMyPage(pageheader* page)
 {
+	printf("Attempting to free page %p, %p\n",page,page->ptr);
     pageheader* currentPage;
     pageheader* previousPage = NULL;
 
@@ -523,6 +534,7 @@ void freeMyPage(pageheader* page)
         if (currentPage->next==NULL)
         {
             //you're done!
+		printf("freeing page %p",page);
             free_page((kma_page_t*)page);
             return;
         }
@@ -541,7 +553,7 @@ void freeMyPage(pageheader* page)
             
             pageheader* nextPage = page->next;
             nextPage->blockHead = current;
-            free_page((kma_page_t*)page);
+            free_page(page->ptr);
             return;
         }
     }
@@ -568,7 +580,7 @@ void freeMyPage(pageheader* page)
             //now set next from there to null
             previous->next = NULL;
             //free the page
-            free_page((kma_page_t*)page);
+            free_page((kma_page_t*)page->ptr);
             return;
             
         }
@@ -590,7 +602,7 @@ void freeMyPage(pageheader* page)
     }
     
  //shouldn't get here at all
- free_page((kma_page_t*)page);
+// free_page((kma_page_t*)page);
 }
 
 
