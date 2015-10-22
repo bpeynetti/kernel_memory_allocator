@@ -232,6 +232,7 @@ void* findFreeBlock(kma_size_t size)
     
     while (current!=NULL)
     {
+        printf("Free block: %p\n",current);
         while (current>(currentPage+PAGE_SIZE))
         {
             currentPage = currentPage->next;
@@ -264,7 +265,7 @@ void* findFreeBlock(kma_size_t size)
                         //figure out the previous address and size 
                         //figure out the location for the next block
                         printf("Current pointer: %p\n", current);
-                        current = current+size;
+                        current = (void*)((int)(current)+size);
                         printf("Current pointer: %p\n", current);
                         //and replicate the size from the old size - size
                         current->size = oldSize - size;
