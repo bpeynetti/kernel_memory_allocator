@@ -473,6 +473,7 @@ void addToList(void* ptr,kma_size_t size)
             previous->next = newBlock;
 
         }
+        current = current->next;
     }
     //if you reached the end of the list
     //add it to the end (previous is the tail now)
