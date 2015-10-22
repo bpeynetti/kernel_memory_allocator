@@ -460,6 +460,7 @@ void addToList(void* ptr,kma_size_t size)
     }
     while (current!=NULL)
     {
+        printf("\tWe are at free node %p of size %d\n",current,current->size);
         // while (current>((void*)((int)currentPage+PAGE_SIZE)))
         // {
         //     currentPage = currentPage->next;
