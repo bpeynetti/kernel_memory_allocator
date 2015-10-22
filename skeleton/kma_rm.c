@@ -371,7 +371,7 @@ void kma_free(void* ptr, kma_size_t size)
 {
     
     
-    printf("Freeing a block of memory of size %d\n", size);
+    printf("Freeing a block of memory of size %d at address %p \n", size,ptr);
     if (globalPtr != NULL)
     {
         printf("    ");
