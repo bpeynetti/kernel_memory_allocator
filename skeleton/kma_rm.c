@@ -154,6 +154,8 @@ void* kma_malloc(kma_size_t size)
         pageHead->next = NULL;
         pageHead->blockHead = globalPtr->ptr + sizeof(pageheader) + size;
         
+        printf("First block at %p \n",pageHead->blockHead);
+        
         blockheader* listHead;
         listHead = (blockheader*)(pageHead->blockHead);
         listHead->size = PAGE_SIZE  - sizeof(pageheader)  - size;
@@ -226,6 +228,8 @@ void* findFreeBlock(kma_size_t size)
     kma_size_t oldSize;
     blockheader* tempNext;
 
+    printf("free block starts at %p\n",current);
+    
     while (current!=NULL)
     {
         while (current>(currentPage+PAGE_SIZE))
