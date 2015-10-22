@@ -416,61 +416,6 @@ void kma_free(void* ptr, kma_size_t size)
     
     return;
     
-    
-    
-    
-    
-    
-    
-    
-    
-    //OLD CODE!!!!!
-    requests++;
-    //printf("FREEING A BLOCK OF SIZE %d\n",size);
-    pagenode* pageNode;
-
-    //printf("\t\tPrinting list of used nodes \n");
-    //printLists(FALSE);
-    //printf("\t\tPrinting list of free nodes \n");
-    //printLists(TRUE);
-    
-    blocknode* current = usedList;
-    blocknode* previous = NULL;
-    //now step through checking the address
-    //when found, switch that node over from the used to the free list
-    void* address = ptr;
-    while (current != NULL){
-        if (current->ptr==address){
-            //found, so move it to the free list
-
-            if (previous!=NULL){
-                //link previous to the next one
-                previous->next = current->next;
-            }
-            else{
-                usedList = current->next;
-            }
-            
-            //and add the temp to the start of the free list
-            current->next = freeList;
-            freeList = current;
-            
-            //decrease from number of blocks in the pagenode
-            pageNode = changePageCounter(current->pageId,-1);
-            if (pageNode->counter==0){
-                  freeMyPage(pageNode);
-            }
-            return;
-        }
-        else {
-            //just step to the next one
-            previous = current;
-            current = current->next;
-        }
-    }
-    //should never get here
-    printf("Error -> address to free is not in the list of used blocks\n");
-    
 }
 
 
@@ -593,7 +538,7 @@ void freeMyPage(pageheader* page)
         }
         pageheader* nextPage = page->next;
         previousPage->next = nextPage;
-        while((void*)current < ((void*)page+PAGE_SIZE))
+        while(((void*)current < ((void*)page+PAGE_SIZE)) && current!=NULL)
         {
             if ((void*)current < (void*)page)
             {
