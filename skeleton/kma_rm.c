@@ -369,6 +369,7 @@ void kma_free(void* ptr, kma_size_t size)
         while (currentBlock != NULL)
         {
             printf("%d->", currentBlock->size);
+            currentBlock = currentBlock->next;
         }
         printf("\n");
     }
