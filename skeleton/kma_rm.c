@@ -535,7 +535,7 @@ void freeMyPage(pageheader* page)
         {
             //you're done!
 		printf("freeing page %p",page);
-            free_page((kma_page_t*)page);
+            free_page((kma_page_t*)globalPtr);
             return;
         }
         else
