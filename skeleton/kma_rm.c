@@ -77,7 +77,7 @@ typedef struct page_header
     //int id;
     kma_page_t* ptr;
     int counter;
-    page_header* next;
+    pageheader* next;
     blockheader* blockHead;
 } pageheader;
 
@@ -505,7 +505,8 @@ void freeMyPage(pageheader* page)
             //*((kma_page_t**)globalPtr->ptr) = page->next;
             globalPtr = (kma_page_t*)page->next;
             
-            page->next->blockHead = current;
+            pageheader* nextPage = page->next;
+            nextPage->blockHead = current;
             free_page((kma_page_t*)page);
             return;
         }
