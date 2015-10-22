@@ -259,7 +259,9 @@ void* findFreeBlock(kma_size_t size)
                         //enough space, so split the block 
                         //figure out the previous address and size 
                         //figure out the location for the next block
+                        printf("Current pointer: %p\n", current);
                         current = current+size;
+                        printf("Current pointer: %p\n", current);
                         //and replicate the size from the old size - size
                         current->size = oldSize - size;
                         current->next = NULL;
