@@ -469,6 +469,7 @@ void addToList(void* ptr,kma_size_t size)
         {
             //stepped over, now we have previous and next
             //link them 
+            printf("\t Found a place to add the block. \n");
             newBlock->size = size;
             newBlock->next = previous->next;
             previous->next = newBlock;
@@ -478,6 +479,7 @@ void addToList(void* ptr,kma_size_t size)
     }
     //if you reached the end of the list
     //add it to the end (previous is the tail now)
+    printf("\t couldn't find a place, put it at the end \n");
     newBlock->size = size;
     newBlock->next = NULL;
     previous->next = newBlock;
