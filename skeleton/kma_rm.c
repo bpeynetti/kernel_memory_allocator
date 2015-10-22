@@ -143,7 +143,7 @@ void* kma_malloc(kma_size_t size)
         //put it in the first place 
         *((kma_page_t**)globalPtr->ptr) = globalPtr;
         
-        printf("global is at %p \n",globalPtr);
+        printf("global is at %p \n",globalPtr->ptr);
         
         //create the page header
         pageheader* pageHead;
