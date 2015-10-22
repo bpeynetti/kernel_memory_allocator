@@ -175,15 +175,19 @@ void* kma_malloc(kma_size_t size)
         currentPage = currentPage->next;
     }
     
-    currentPage->next = get_page();
+    kma_page_t* pageTemp = get_page();
     
-    *((kma_page_t**)currentPage->next->ptr) = currentPage->next;
+    *((kma_page_t**)pageTemp->ptr) = pageTemp;
+
     
     pageheader* newPageHead;
-    newPageHead = (pageheader*) (currentPage->next->ptr);
+    newPageHead = (pageheader*) (pageTemp->ptr);
     newPageHead->ptr = currentPage->next->ptr;
     newPageHead->counter = 1;
     newPageHead->next = NULL;
+    
+    currentPage->next = newPageHead;
+    
     pageheader* firstPageHead = (pageheader*) (globalPtr->ptr);
     newPageHead->blockHead = firstPageHead->blockHead;
     
