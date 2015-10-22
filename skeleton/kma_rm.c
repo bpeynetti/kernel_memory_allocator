@@ -121,7 +121,8 @@ void* kma_malloc(kma_size_t size)
         printf("    ");
         pageheader* firstPage = (pageheader*) (globalPtr->ptr);
         printf("First page: %p",firstPage);
-	firstPage->ptr = (kma_page_t*)firstPage;    
+	printf("that page points to %p \n",firstPage->ptr);
+	//firstPage->ptr = (kma_page_t*)firstPage;    
     blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
         while (currentBlock != NULL)
         {
@@ -140,18 +141,21 @@ void* kma_malloc(kma_size_t size)
     {
         //initialize everything    
         //get a new page, put it to global ptr
-        globalPtr = get_page();
-
+        kma_page_t* newFirstPage = get_page();
+	
         //put it in the first place 
-        *((kma_page_t**)globalPtr->ptr) = globalPtr;
-        
-        printf("global is at %p \n",globalPtr->ptr);
+        *((kma_page_t**)newFirstPage->ptr) = newFirstPage;
+        globalPtr = newFirstPage;
+
+        printf("global points to  %p \n",globalPtr->ptr);
+	printf("globalPtr is at %p \n",globalPtr);
         
         //create the page header
         pageheader* pageHead;
         //and set the location (address) of the head to the beginning of the page
-        pageHead = (pageheader*) (globalPtr->ptr);
-        pageHead->ptr = globalPtr;
+        pageHead = (pageheader*) (newFirstPage->ptr);
+        pageHead->ptr = newFirstPage;
+	printf("pageHead->ptr points to %p\n",pageHead->ptr);
         pageHead->counter = 1;
         pageHead->next = NULL;
         pageHead->blockHead = globalPtr->ptr + sizeof(pageheader) + size;
@@ -496,12 +500,12 @@ void addToList(void* ptr,kma_size_t size)
 		//and this one to the next one
             newBlock->next = current;
             previous->next = newBlock;
-	    printf("Node at %p with size %d pointing to it is  %p (%p) and from this, next is %p",newBlock,newBlock->size,previous,previous->next,newBlock->next);
+	  //  printf("Node at %p with size %d pointing to it is  %p (%p) and from this, next is %p",newBlock,newBlock->size,previous,previous->next,newBlock->next);
             return;
         }
         previous = current;
         //current = current->next;
-	printf("Next to look at is %p\n",previous->next);
+	//printf("Next to look at is %p\n",previous->next);
 	current = previous->next;
     }
     //if you reached the end of the list
@@ -535,7 +539,7 @@ void freeMyPage(pageheader* page)
         {
             //you're done!
 		printf("freeing page %p",page);
-            free_page((kma_page_t*)globalPtr);
+            free_page((kma_page_t*)page->ptr);
             return;
         }
         else
