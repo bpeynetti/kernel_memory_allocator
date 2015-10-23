@@ -95,6 +95,8 @@ typedef struct page_header
 //define a pointer kma_struct_t that points to the beginning of everything
 kma_page_t* globalPtr = NULL;
 
+int lineCounter = 0;
+
 
 /************Function Prototypes******************************************/
 void* kma_malloc(kma_size_t size);
@@ -115,26 +117,30 @@ int currentPages = 0;
 void* kma_malloc(kma_size_t size)
 {
 
+	lineCounter++;
+
+	printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
+
    // if (size<16){
 //	size=16;
   // }
     
-    printf("Allocating a new block of memory of size %d\n", size);
-    if (globalPtr != NULL)
-    {
-        printf("    ");
-        pageheader* firstPage = (pageheader*) (globalPtr->ptr);
-        printf("First page: %p",firstPage);
-	printf("that page points to %p \n",firstPage->ptr);
+    //printf("Allocating a new block of memory of size %d\n", size);
+   //if (globalPtr != NULL)
+    //{
+    //    printf("    ");
+    //    pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+    //    printf("First page: %p",firstPage);
+	//printf("that page points to %p \n",firstPage->ptr);
 	//firstPage->ptr = (kma_page_t*)firstPage;    
-   	 blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
-        while (currentBlock != NULL)
-        {
-            printf("%d->", currentBlock->size);
-            currentBlock = currentBlock->next;
-        }
-        printf("\n");
-    }
+   	// blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+       // while (currentBlock != NULL)
+       // {
+       //     printf("%d->", currentBlock->size);
+        //    currentBlock = currentBlock->next;
+       // }
+       // printf("\n");
+   // }
     
     
     
@@ -151,15 +157,15 @@ void* kma_malloc(kma_size_t size)
         *((kma_page_t**)newFirstPage->ptr) = newFirstPage;
         globalPtr = newFirstPage;
 
-        printf("global points to  %p \n",globalPtr->ptr);
-	printf("globalPtr is at %p \n",globalPtr);
+        //printf("global points to  %p \n",globalPtr->ptr);
+	//printf("globalPtr is at %p \n",globalPtr);
         
         //create the page header
         pageheader* pageHead;
         //and set the location (address) of the head to the beginning of the page
         pageHead = (pageheader*) (newFirstPage->ptr);
         pageHead->ptr = newFirstPage;
-	printf("pageHead->ptr points to %p\n",pageHead->ptr);
+	//printf("pageHead->ptr points to %p\n",pageHead->ptr);
         pageHead->counter = 1;
         pageHead->next = NULL;
         pageHead->blockHead = globalPtr->ptr + sizeof(pageheader) + size;
@@ -181,21 +187,22 @@ void* kma_malloc(kma_size_t size)
     if (returnAddress!= NULL)
     {
         //printf("ALLOCATED a new block of memory of size %d\n", size);
-        if (globalPtr != NULL)
-        {
-            printf("    ");
-            pageheader* firstPage = (pageheader*) (globalPtr->ptr);
-            blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
-            while (currentBlock != NULL)
-            {
-                printf("%d->", currentBlock->size);
-                currentBlock = currentBlock->next;
-            }
-          printf("\n");
-        }
+        //if (globalPtr != NULL)
+        //{
+        //    printf("    ");
+        //    pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+        //    blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+        //    while (currentBlock != NULL)
+        //    {
+        //        printf("%d->", currentBlock->size);
+        //        currentBlock = currentBlock->next;
+        //    }
+        //  printf("\n");
+       // }
         return returnAddress;
     }
-	printf("\n\n\n ********************* GETTING NEW PAGE **** \n");    
+	printf("\n\n\n ********************* GETTING NEW PAGE **** \n");
+	printf("THIS IS REQUEST NUMBER %d\n", lineCounter);    
     pageheader* currentPage = (pageheader*) (globalPtr->ptr);
     
     while (currentPage->next != NULL)
@@ -235,8 +242,19 @@ void* kma_malloc(kma_size_t size)
     newBlock->next = NULL;
     
     currentBlock->next = newBlock;
-    printf("newBlock address is %p and size %d\n",newBlock,newBlock->size);
-    
+    //printf("newBlock address is %p and size %d\n",newBlock,newBlock->size);
+   
+    printf("Before freeing the page the page list looks like this: \n");
+        pageheader* pageIterator = (pageheader*) (globalPtr->ptr);
+        while (pageIterator != NULL)
+        {
+                printf("Addr: %p, Ctr: %d -> ", pageIterator, pageIterator->counter);
+                pageIterator = pageIterator->next;
+        }
+        printf("\n");
+
+
+ 
     return findFreeBlock(size);
 }
 
@@ -259,9 +277,13 @@ void* findFreeBlock(kma_size_t size)
     
     while (current!=NULL)
     {
-        //printf("Free block: %p\n",current);
-        while ((void*)current>(void*)((int)currentPage+PAGE_SIZE))
+        printf("Free block: %p\n",current);
+        while (!((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
         {
+	    if (currentPage->next == NULL)
+	    {
+		break;
+	    }
             currentPage = currentPage->next;
         }
         //now go through the list and find a free block
@@ -269,8 +291,9 @@ void* findFreeBlock(kma_size_t size)
         {
             returnAddr = current;
             oldSize = current->size;
-            
-            printf("return address at %p \n",returnAddr);
+               
+	
+            //printf("return address at %p \n",returnAddr);
             // take out of linked list
             //if head of the blocks
             if (previous==NULL)
@@ -300,15 +323,15 @@ void* findFreeBlock(kma_size_t size)
 			else
 			{
 
-	                        printf("Current pointer: %p\n", current);
+	                        //printf("Current pointer: %p\n", current);
         	                current = (void*)((int)(current)+size);
-                	        printf("Current pointer: %p\n", current);
+                	        //printf("Current pointer: %p\n", current);
                       	 	   //and replicate the size from the old size - size
                     	 	   current->size = oldSize - size;
                        		 current->next = NULL;
                         
                        		 //update the head of list to this one
-                       		 currentPage->blockHead = current;
+                       		 pageHead->blockHead = current;
                         }
                         currentPage->counter++;
                         //and return the old address 
@@ -326,14 +349,16 @@ void* findFreeBlock(kma_size_t size)
 		    }
 		    else
 		    {
+			 //printf("Size of block found is %d\n", current->size);
 			 tempNext = current->next;
-                                            current = (void*)((int)(current)+size);
+                         current = (void*)((int)(current)+size);
 
                    	 current->size = oldSize - size;
+			 //printf("After allocating, size is %d\n", current->size);
                   	  //and copy pointer to next
                   	  current->next = tempNext;
                    	 //no previous one so update header
-                   	 currentPage->blockHead = current;
+                   	 pageHead->blockHead = current;
                    	 //add one to page counter
 		    }
                     currentPage->counter++;
@@ -374,7 +399,18 @@ void* findFreeBlock(kma_size_t size)
                         previous->next = current;
                    }     
                     currentPage->counter++;
-                    //and return the old address 
+                    
+		    printf("Before freeing the page the page list looks like this: \n");
+       		    pageheader* pageIterator = (pageheader*) (globalPtr->ptr);
+         	    while (pageIterator != NULL)
+        	    {
+        	        printf("Addr: %p, Ctr: %d -> ", pageIterator, pageIterator->counter);
+               		 pageIterator = pageIterator->next;
+        	    }
+       		     printf("\n");
+
+
+		    //and return the old address 
                     return (void*)returnAddr;
                     // }
                 }
@@ -422,23 +458,28 @@ void* findFreeBlock(kma_size_t size)
 
 void kma_free(void* ptr, kma_size_t size)
 {
+
+	lineCounter++;	
+
+	printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
+
   // if(size<16){ size=16; } 
     
-    printf("Freeing a block of memory of size %d at address %p \n", size,ptr);
-    if (globalPtr != NULL)
-    {
-        printf("    ");
-        pageheader* firstPage = (pageheader*) (globalPtr->ptr);
-	printf("first page at %p\n",firstPage);
-        blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
-        printf("First free block of size %d at %p and points to %p \n",currentBlock->size,currentBlock,currentBlock->next);
-	while (currentBlock != NULL)
-        {
-            printf("%d-> (%p)", currentBlock->size,currentBlock->next);
-            currentBlock = currentBlock->next;
-        }
-        printf("\n");
-    }
+    //printf("Freeing a block of memory of size %d at address %p \n", size,ptr);
+    //if (globalPtr != NULL)
+    //{
+        //printf("    ");
+       // pageheader* firstPage = (pageheader*) (globalPtr->ptr);
+	//printf("first page at %p\n",firstPage);
+        //blockheader* currentBlock = (blockheader*)(firstPage->blockHead);
+        //printf("First free block of size %d at %p and points to %p \n",currentBlock->size,currentBlock,currentBlock->next);
+	//while (currentBlock != NULL)
+        //{
+            //printf("%d-> (%p)", currentBlock->size,currentBlock->next);
+        //    currentBlock = currentBlock->next;
+       // }
+       // printf("\n");
+    //}
     
     //first need to add the requested memory location to the free list
     addToList(ptr,size);
@@ -446,12 +487,12 @@ void kma_free(void* ptr, kma_size_t size)
     //then need to find the page the freed block belongs to and decrement counter for that page
     pageheader* currentPage = (pageheader*) (globalPtr->ptr);
     pageheader* nextPage = currentPage->next;
-    printf("CurrentPage->next = %p\n",nextPage);
+    //printf("CurrentPage->next = %p\n",nextPage);
     int pageID=1; 
     //the pointer specified is in the first page
     if (ptr < (void*)((int)currentPage+PAGE_SIZE))
     {
-        printf("First page counter is %d and decrement by 1 \n",currentPage->counter);
+        //printf("First page counter is %d and decrement by 1 \n",currentPage->counter);
 	currentPage->counter--;
     }
     
@@ -461,7 +502,7 @@ void kma_free(void* ptr, kma_size_t size)
         while (nextPage != NULL && (nextPage!=currentPage))
         {
             //if the pointer is between the addresses of the next two pages
-            if (ptr > (void*)(currentPage) && ptr < (void*)(nextPage))
+            if (ptr > (void*)(currentPage) && ptr < (void*)((int)(currentPage) + PAGE_SIZE))
             {
 		printf("Page %p counter %d, decrement 1 \n",currentPage,currentPage->counter);
                 currentPage->counter--;
@@ -475,7 +516,7 @@ void kma_free(void* ptr, kma_size_t size)
         //if you make it this far and are at the end of the list, the pointer is in the last page
         if (nextPage == NULL || nextPage==currentPage)
         {
-		printf("counter of last page: %d \n",currentPage->counter);
+		//printf("counter of last page: %d \n",currentPage->counter);
             currentPage->counter--;
         }
         
@@ -485,6 +526,7 @@ void kma_free(void* ptr, kma_size_t size)
     //then, if the counter has reached 0, free the page
     if (currentPage->counter==0)
     {
+	printf("TRYING TO FREE A PAGE------------------------------\n");
         freeMyPage(currentPage);
     }
     
@@ -528,7 +570,7 @@ void addToList(void* ptr,kma_size_t size)
         {
             //stepped over, now we have previous and next
             //link them 
-            printf("\t Found a place to add the block. \n");
+            //printf("\t Found a place to add the block. \n");
             //size done before
 		//just connect the previous to this one
 		//and this one to the next one
@@ -544,7 +586,7 @@ void addToList(void* ptr,kma_size_t size)
     }
     //if you reached the end of the list
     //add it to the end (previous is the tail now)
-    printf("\t couldn't find a place, put it at the end \n");
+    //printf("\t couldn't find a place, put it at the end \n");
     newBlock->size = size;
     newBlock->next = NULL;
     previous->next = newBlock;
@@ -554,6 +596,7 @@ void addToList(void* ptr,kma_size_t size)
 void freeMyPage(pageheader* page)
 {
 	printf("Attempting to free page %p, %p\n",page,page->ptr);
+    	printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
     pageheader* currentPage;
     pageheader* previousPage = NULL;
 
@@ -563,7 +606,17 @@ void freeMyPage(pageheader* page)
     blockheader* current = currentPage->blockHead;
 
     //it's at the beginning of the list. make it point to the first free node
-    
+   
+	printf("Before freeing the page the page list looks like this: \n");
+	pageheader* pageIterator = (pageheader*) (globalPtr->ptr);
+	while (pageIterator != NULL)
+	{
+		printf("Addr: %p, Ctr: %d -> ", pageIterator, pageIterator->counter);
+		pageIterator = pageIterator->next;
+	}
+	printf("\n");
+ 	
+
     //
     // if it's the first one to free
     if (page==currentPage)
@@ -579,10 +632,15 @@ void freeMyPage(pageheader* page)
         else
         {
             //find the first node in a next page
-            while (((void*)current < ((void*)page+PAGE_SIZE)) && (current!=NULL))
-            {
-                current = current->next;
-            }
+	     while (((void*)current > (void*)currentPage) && ((void*)current < (void*)((int)currentPage+PAGE_SIZE)))
+	     {
+		if (current->next==NULL) { break;}
+		current = current->next; 
+	     }
+         //   while (((void*)current < ((void*)((int)page+PAGE_SIZE))) && (current!=NULL))
+         //   {
+         //       current = current->next;
+         //   }
 
             //current has the new first node
             //and new first page is next page
@@ -591,7 +649,8 @@ void freeMyPage(pageheader* page)
             
             pageheader* nextPage = page->next;
             nextPage->blockHead = current;
-            free_page(page->ptr);
+            printf("New head page is %p and block head at %p\n",globalPtr,nextPage->blockHead);
+		free_page(page->ptr);
             return;
         }
     }
@@ -600,7 +659,7 @@ void freeMyPage(pageheader* page)
         //not the first page
         //find the previous page
         pageheader* tempPage = (pageheader*)globalPtr->ptr;
-        while (tempPage<page)
+        while (tempPage!=page)
         {
             previousPage = tempPage;
             tempPage = tempPage->next;
@@ -609,7 +668,7 @@ void freeMyPage(pageheader* page)
         if (page->next==NULL)
         {
             //the last one
-            while ((void*)current<(void*)page)
+            while (!((void*)current > ((void*)page)) && ((void*)current<((void*)((int)page)+PAGE_SIZE)))
             {
                 //step through until you find the first block in the page
                 previous = current;
@@ -618,6 +677,7 @@ void freeMyPage(pageheader* page)
             //now set next from there to null
             previous->next = NULL;
             //free the page
+	    previousPage->next = NULL;
             free_page((kma_page_t*)page->ptr);
             return;
             
@@ -635,7 +695,7 @@ void freeMyPage(pageheader* page)
             current = current->next;
         }
         previous->next = current;
-        free_page((kma_page_t*)page);
+        free_page((kma_page_t*)page->ptr);
         return;
     }
     
