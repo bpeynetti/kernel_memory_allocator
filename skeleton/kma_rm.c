@@ -559,6 +559,7 @@ void addToList(void* ptr,kma_size_t size)
         
         return;   
     }
+	bool inPage = false;
     while (current!=NULL)
     {
        // printf("\tWe are at free node %p of size %d and pointing to %p \n",current,current->size,current->next);
