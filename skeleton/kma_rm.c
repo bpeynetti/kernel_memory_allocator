@@ -215,7 +215,7 @@ void* kma_malloc(kma_size_t size)
     newPageHead->next = NULL;
     
     currentPage->next = newPageHead;
-    
+    newPageHead->next=NULL;    
     pageheader* firstPageHead = (pageheader*) (globalPtr->ptr);
     newPageHead->blockHead = firstPageHead->blockHead;
     
@@ -458,7 +458,7 @@ void kma_free(void* ptr, kma_size_t size)
     //the pointer specified is not in the first page
     else
     {
-        while (nextPage != NULL)
+        while (nextPage != NULL && (nextPage!=currentPage))
         {
             //if the pointer is between the addresses of the next two pages
             if (ptr > (void*)(currentPage) && ptr < (void*)(nextPage))
@@ -473,7 +473,7 @@ void kma_free(void* ptr, kma_size_t size)
         }
         
         //if you make it this far and are at the end of the list, the pointer is in the last page
-        if (nextPage == NULL)
+        if (nextPage == NULL || nextPage==currentPage)
         {
 		printf("counter of last page: %d \n",currentPage->counter);
             currentPage->counter--;
