@@ -280,10 +280,10 @@ void* findFreeBlock(kma_size_t size)
         printf("Free block: %p\n",current);
         while (!((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
         {
-	    if (currentPage->next == NULL)
-	    {
-		break;
-	    }
+	    	if (currentPage->next == NULL)
+	    	{
+				break;
+	    	}
             currentPage = currentPage->next;
         }
         //now go through the list and find a free block
@@ -560,15 +560,34 @@ void addToList(void* ptr,kma_size_t size)
         return;   
     }
 	bool inPage = false;
-    while (current!=NULL)
-    {
-       // printf("\tWe are at free node %p of size %d and pointing to %p \n",current,current->size,current->next);
-        // while (current>((void*)((int)currentPage+PAGE_SIZE)))
-        // {
-        //     currentPage = currentPage->next;
-        // }
-        if ((void*)current>ptr)
+	bool pageVisited = false;
+	//figure out what page your pointer is at
+	 while (!((void*)ptr>(void*)(currentPage) && (void*)ptr < (void*)((int)(currentPage) + PAGE_SIZE)))
         {
+	    	if (currentPage->next == NULL)
+	    	{
+				break;
+	    	}
+            currentPage = currentPage->next;
+    }
+    while ((pageVisited==false || inPage==true)&&(current!=NULL))
+    {
+    	if (((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
+    	{
+    		//within the bounds of the page
+    		inPage = true;
+
+    	}
+    	if (inPage==true && !(((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE))))
+    	//if current passed over ptr but previous hasn't 
+    	{
+    		pageVisited = true;
+    		inPage = false;
+    	}
+
+        if (inPage==true && (void*)ptr<(void*)current)
+        {
+
             //stepped over, now we have previous and next
             //link them 
             //printf("\t Found a place to add the block. \n");
@@ -582,15 +601,24 @@ void addToList(void* ptr,kma_size_t size)
         }
         previous = current;
         //current = current->next;
-	//printf("Next to look at is %p\n",previous->next);
-	current = previous->next;
+		//printf("Next to look at is %p\n",previous->next);
+		current = previous->next;
     }
+
     //if you reached the end of the list
     //add it to the end (previous is the tail now)
     //printf("\t couldn't find a place, put it at the end \n");
-    newBlock->size = size;
-    newBlock->next = NULL;
+    if (current==NULL)
+    {
+    	newBlock->size = size;
+    	newBlock->next = NULL;
+    	previous->next = newBlock;
+    	return;
+    }
+
+    newBlock->next = current;
     previous->next = newBlock;
+    return;
 
 }
 
