@@ -117,6 +117,7 @@ void* kma_malloc(kma_size_t size)
 {
 
     lineCounter++;
+    void* returnAddress;
 
     printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
 
@@ -145,7 +146,7 @@ void* kma_malloc(kma_size_t size)
     }
 
     returnAddress = findFreeBlock(size);
-    
+
     return returnAddress;
 
 
