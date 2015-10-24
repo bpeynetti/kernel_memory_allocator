@@ -296,7 +296,7 @@ void* kma_malloc(kma_size_t size)
 }
 
 
-void new_page(kma_size_t* newPage)
+void new_page(kma_page_t* newPage)
 {
     printf("getting new page \n \n ");
     //gets a pointer to a new page
@@ -311,7 +311,7 @@ void new_page(kma_size_t* newPage)
     newPageHead->counter = 0;
     newPageHead->next = NULL;
     newPageHead->blockHead = NULL;
-    newPageHead->pageid = 0
+    newPageHead->pageid = 0;
 
 
     //link pages to each other
@@ -326,7 +326,7 @@ void new_page(kma_size_t* newPage)
         while (firstPage!=NULL)
         {
             previousPage = firstPage;
-            firstPage = firstPage->nextPage;
+            firstPage = firstPage->next;
         }
 
         //now add to next one
@@ -336,7 +336,7 @@ void new_page(kma_size_t* newPage)
     }
 
     //add to list a block of size pageSize - header at location page+pageheader
-    addToList((void*)((int)newPageHead+sizeof(pageheader)),(PAGE_SIZE-sizeof(pageheader));
+    addToList((void*)((int)newPageHead+sizeof(pageheader)),(PAGE_SIZE-sizeof(pageheader)));
 }
 
 
@@ -648,10 +648,10 @@ void addToList(void* ptr,kma_size_t size)
 
     //ALL OTHER CASES
     //go through the blocks and find a place to put it
-    bool inPage = false;
+    bool inPage = FALSE;
 
     //move through pages to find where the block belongs in the pages
-    while (((void*)ptr >> 13) != ((void*)currentPage >> 13))
+    while (((int)ptr >> 13) != ((int)currentPage >> 13))
     {
         if (currentPage->next == NULL) {break;}
         currentPage = currentPage->next;
@@ -662,13 +662,13 @@ void addToList(void* ptr,kma_size_t size)
     //current has the blockhead
     while (current!=NULL)
     {
-        if ( (current>>13) == (ptr>>13) )
+        if ( (((int)current>>13) == ((int)ptr>>13) )
         {
             inPage = TRUE;
-            pageVisited = TRUE;          
+            //pageVisited = TRUE;          
         }
-        pageheader* cPage = (pageheader*)((current>>13)<<13);
-        pageheader* pPage = (pageheader*)((ptr>>13)<<13);
+        pageheader* cPage = (pageheader*)(((int)current>>13)<<13);
+        pageheader* pPage = (pageheader*)(((int)ptr>>13)<<13);
 
         if (cPage->pageid > pPage->pageid)
         {
@@ -679,7 +679,7 @@ void addToList(void* ptr,kma_size_t size)
         if (inPage==TRUE)
         {
             //if it's inside the page and current ahead of ptr
-            if (current > ptr)
+            if ((void*)current > (void*)ptr)
             {
                 break;
             }
