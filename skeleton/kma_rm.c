@@ -524,51 +524,62 @@ void kma_free(void* ptr, kma_size_t size)
     //first need to add the requested memory location to the free list
     addToList(ptr,size);
     
+    //figure out what page we are decreasing from
+    pageheader* decreasePage = (pageheader*)(((int)ptr>>13)<<13);
+    printf("Page %p counter %d decrement by 1\n",decreasePage,decreasePage->counter);
+    decreasePage->counter--;
+    if (decreasePage->counter==0)
+    {
+        printf("Freeing page %p\n",decreasePage);
+        freeMyPage(decreasePage);
+    }
+
+
     //then need to find the page the freed block belongs to and decrement counter for that page
-    pageheader* currentPage = (pageheader*) (globalPtr->ptr);
-    pageheader* nextPage = currentPage->next;
-    //printf("CurrentPage->next = %p\n",nextPage);
-    //int pageID=1; 
-    //the pointer specified is in the first page
-    if (ptr < (void*)((int)currentPage+PAGE_SIZE))
-    {
-        printf("First page counter is %d and decrement by 1 \n",currentPage->counter);
-	currentPage->counter--;
-    }
+ //    pageheader* currentPage = (pageheader*) (globalPtr->ptr);
+ //    pageheader* nextPage = currentPage->next;
+ //    //printf("CurrentPage->next = %p\n",nextPage);
+ //    //int pageID=1; 
+ //    //the pointer specified is in the first page
+ //    if (ptr < (void*)((int)currentPage+PAGE_SIZE))
+ //    {
+ //        printf("First page counter is %d and decrement by 1 \n",currentPage->counter);
+	// currentPage->counter--;
+ //    }
     
-    //the pointer specified is not in the first page
-    else
-    {
-        while (nextPage != NULL && (nextPage!=currentPage))
-        {
-            //if the pointer is between the addresses of the next two pages
-            if (ptr > (void*)(currentPage) && ptr < (void*)((int)(currentPage) + PAGE_SIZE))
-            {
-		printf("Page %p counter %d, decrement 1 \n",currentPage,currentPage->counter);
-                currentPage->counter--;
-                break;
-            }
+ //    //the pointer specified is not in the first page
+ //    else
+ //    {
+ //        while (nextPage != NULL && (nextPage!=currentPage))
+ //        {
+ //            //if the pointer is between the addresses of the next two pages
+ //            if (ptr > (void*)(currentPage) && ptr < (void*)((int)(currentPage) + PAGE_SIZE))
+ //            {
+	// 	printf("Page %p counter %d, decrement 1 \n",currentPage,currentPage->counter);
+ //                currentPage->counter--;
+ //                break;
+ //            }
         
-            currentPage = currentPage->next;
-            nextPage = nextPage->next;
-        }
+ //            currentPage = currentPage->next;
+ //            nextPage = nextPage->next;
+ //        }
         
-        //if you make it this far and are at the end of the list, the pointer is in the last page
-        if (nextPage == NULL || nextPage==currentPage)
-        {
-		printf("counter of last page: %d and decrement by 1 \n",currentPage->counter);
-            currentPage->counter--;
-        }
+ //        //if you make it this far and are at the end of the list, the pointer is in the last page
+ //        if (nextPage == NULL || nextPage==currentPage)
+ //        {
+	// 	printf("counter of last page: %d and decrement by 1 \n",currentPage->counter);
+ //            currentPage->counter--;
+ //        }
         
-    }
+ //    }
     
     
-    //then, if the counter has reached 0, free the page
-    if (currentPage->counter==0)
-    {
-	printf("TRYING TO FREE PAGE %p ---------------\n",currentPage);
-        freeMyPage(currentPage);
-    }
+ //    //then, if the counter has reached 0, free the page
+ //    if (currentPage->counter==0)
+ //    {
+	// printf("TRYING TO FREE PAGE %p ---------------\n",currentPage);
+ //        freeMyPage(currentPage);
+ //    }
     
     return;
     
