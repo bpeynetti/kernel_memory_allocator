@@ -838,17 +838,24 @@ void freeMyPage(pageheader* page)
             return;
             
         }
+        //not the last one
+
+        //linked them 
         pageheader* nextPage = page->next;
         previousPage->next = nextPage;
-        while(((void*)current < ((void*)page+PAGE_SIZE)) && current!=NULL)
+
+        //now link the blocks
+        pageheader* cPage = (pageheader*)(((int)current>>13)<<13);
+        while(cPage->pageid <= page->pageid)
         {
-            if ((void*)current < (void*)page)
+            if (cPage->pageid < page->pageid)
             {
-                //update previous
+                //update previous as well
                 previous = current;
             }
             //update current
             current = current->next;
+            cPage = (pageheader*)(((int)current>>13)<<13);
         }
         previous->next = current;
         free_page((kma_page_t*)page->ptr);
