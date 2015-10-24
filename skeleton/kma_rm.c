@@ -365,93 +365,58 @@ void* findFreeBlock(kma_size_t size)
     //printf("free block starts at %p\n",current); 
     while (current!=NULL)
     {
-//        printf("Free block: %p of size %d \n",current,current->size);
-        //while (!((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
-        //{
-	//    	if (currentPage->next == NULL)
-	 //   	{
-	//			break;
-	//    	}
-        //    currentPage = currentPage->next;
-        //}
        currentPage = (pageheader*)(((int)current>>13)<<13);
-	printf("Page looked at: %p and counter is %d\n",currentPage,currentPage->counter);
+	   printf("Page looked at: %p and counter is %d\n",currentPage,currentPage->counter);
         //now go through the list and find a free block
         if (current->size >= size)
         {
             returnAddr = current;
+            returnPage = (pageheader*)(((int)current>>13)<<13);
+            printf("Will add to page %p (counter: %d + 1)\n",returnPage,returnPage->counter);
             oldSize = current->size;
-               
-	
-            //printf("return address at %p \n",returnAddr);
-            // take out of linked list
+
             //if head of the blocks
             if (previous==NULL)
             {
-
                 //change the ptr to the next free block
                 if (current->next==NULL){
-                    //only one block!
-                    
-			if (current->size - size < 8)
-			{
-				//need to skip remaining block
-				pageHead->blockHead = NULL;
-			}
-                    //if there is no space for the new block and at least a header for a new block
-                    // if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
-                    // {
-                    //     //not enough space in the last free block, return null
-                    //     return (void*)NULL;
-                    // }
-                    // else 
-                    // {
-                        //enough space, so split the block 
-                        //figure out the previous address and size 
-                        //figure out the location for the next block
-
-			else
-			{
-
-	                        //printf("Current pointer: %p\n", current);
-        	                current = (void*)((int)(current)+size);
-                	        //printf("Current pointer: %p\n", current);
-                      	 	   //and replicate the size from the old size - size
-                    	 	   current->size = oldSize - size;
-                       		 current->next = NULL;
-                        
-                       		 //update the head of list to this one
-                       		 pageHead->blockHead = current;
-                        }
-                        currentPage->counter++;
-                        //and return the old address 
-                        return (void*)returnAddr;
-                    // }
+                    //only one block!    
+                    if (current->size - size < 8)
+			         {
+				        //need to skip remaining block, so point to nothing now
+				        pageHead->blockHead = NULL;
+			         }
+			         else
+			         {
+                        current = (void*)((int)(current)+size);
+                        current->size = oldSize - size;
+                        current->next = NULL;
+                        //update the head of list to this one
+                        pageHead->blockHead = current;
+                    }
+                    //and return the old address 
+                    return (void*)returnAddr;
                 }
                 else 
                 {
                     //you're at the beginning of your list and the list is more than one
                     //you know it's big enough so just change its size and change the location of the header
                    
-		    if (current->size - size < 8)
-		    {
-			 pageHead->blockHead = current->next;
-		    }
-		    else
-		    {
-			 //printf("Size of block found is %d\n", current->size);
-			 tempNext = current->next;
-                         current = (void*)((int)(current)+size);
+        		    if (current->size - size < 8)
+        		    {
+        			     pageHead->blockHead = current->next;
+        		    }
+        		    else
+        		    {
+        			    tempNext = current->next;
+                        current = (void*)((int)(current)+size);
 
-                   	 current->size = oldSize - size;
-			 //printf("After allocating, size is %d\n", current->size);
-                  	  //and copy pointer to next
-                  	  current->next = tempNext;
-                   	 //no previous one so update header
-                   	 pageHead->blockHead = current;
-                   	 //add one to page counter
-		    }
-                    currentPage->counter++;
+                   	    current->size = oldSize - size;
+                  	     current->next = tempNext;
+                   	    //no previous one so update header
+                   	    pageHead->blockHead = current;
+                   	    //add one to page counter
+                    }
                     //nothing else to update
                     return (void*)returnAddr;
                 }
@@ -462,47 +427,25 @@ void* findFreeBlock(kma_size_t size)
                 //if you're at the tail
                 if (current->next==NULL)
                 {
-		    if (current->size - size < 8)
-		    {
-			previous->next = NULL;
-		    }
-		    else
-		    {
-                   	 //add one node to the end 
-                    	// if (((void*)currentPage+(void*)PAGE_SIZE-((void*)current))<((void*)size+sizeof(blockheader)))
-                  	  // {
-                   	 //     //not enough space in the last free block, return null
-                   	 //     return (void*)NULL;
-                   	 // }
-                   	 // else 
-                   	 // {
-                        //enough space, so split the block 
-                        //figure out the previous address and size 
-                        //figure out the location for the next block
-                                                current = (void*)((int)(current)+size);
+                    if (current->size - size < 8)
+                    {
+                        previous->next = NULL;
+                    }
+                    else
+                    {
+                       	 //add one node to the end 
+                        current = (void*)((int)(current)+size);
 
                         //and replicate the size from the old size - size
                         current->size = oldSize - size;
                         current->next = NULL;
-                        
+                            
                         //update the previous next to this one
                         previous->next = current;
-                   }     
-                    currentPage->counter++;
-                    
-		    printf("Before returning null  address, page list : \n");
-       		    pageheader* pageIterator = (pageheader*) (globalPtr->ptr);
-         	    while (pageIterator != NULL)
-        	    {
-        	        printf("Addr: %p, Ctr: %d -> ", pageIterator, pageIterator->counter);
-               		 pageIterator = pageIterator->next;
-        	    }
-       		     printf("\n");
+                    }     
 
-
-		    //and return the old address 
+                    //and return the old address 
                     return (void*)returnAddr;
-                    // }
                 }
                 else 
                 {
@@ -516,7 +459,6 @@ void* findFreeBlock(kma_size_t size)
                         //take it out of the list
                         previous->next = current->next;
                         //and add 1 more
-                        currentPage->counter++;
                         return (void*)returnAddr;
                     }
                     else 
@@ -524,17 +466,17 @@ void* findFreeBlock(kma_size_t size)
                         //block is too big, so allocate new smaller block 
                         //copy over (shift the free node)
                         tempNext = current->next;
-                                                current = (void*)((int)(current)+size);
+                        current = (void*)((int)(current)+size);
 
                         current->size = oldSize - size;
                         current->next = tempNext;
-                        currentPage->counter++;
                         
                         previous->next = current;
                         return (void*)returnAddr;
                     }
                 }
             }
+            printf("Shouldn't get here! \n");
         }
         else 
         {
