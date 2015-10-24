@@ -77,8 +77,10 @@ typedef struct page_header
     //int id;
     kma_page_t* ptr;
     int counter;
+    int page_count;
     void* next;
     blockheader* blockHead;
+    int pageid;
 } pageheader;
 
 // free list pointer
@@ -110,16 +112,47 @@ void printPageList();
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
-int requests = 0;
-int maxPages = 0;
-int currentPages = 0;
 
 void* kma_malloc(kma_size_t size)
 {
 
-	lineCounter++;
+    lineCounter++;
 
-	printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
+    printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
+
+
+    if ((size + sizeof(kma_page_t*)) > PAGE_SIZE)
+    {
+        return NULL;
+    }
+    //
+    if (size < sizeof(kma_page_t))
+    {
+        size = sizeof(kma_page_t);
+    }
+    //
+    if (globalPtr==NULL)
+    {
+        globalPtr = get_page();
+        new_page(globalPtr);
+    }
+
+    returnAddress = findFreeBlock(size);
+
+    if (returnAddress==NULL)
+    {
+        new_page(get_page());
+    }
+
+    returnAddress = findFreeBlock(size);
+    
+    return returnAddress;
+
+
+
+
+
+
 
    // if (size<16){
 //	size=16;
@@ -167,6 +200,7 @@ void* kma_malloc(kma_size_t size)
         pageHead->ptr = newFirstPage;
 	//printf("pageHead->ptr points to %p\n",pageHead->ptr);
         pageHead->counter = 1;
+        pageHead->pagecount=1;
         pageHead->next = NULL;
         pageHead->blockHead = globalPtr->ptr + sizeof(pageheader) + size;
         
@@ -257,6 +291,50 @@ void* kma_malloc(kma_size_t size)
  
     return findFreeBlock(size);
 }
+
+
+void new_page(kma_size_t* newPage)
+{
+    //gets a pointer to a new page
+    //allocates a free block size of the page - header
+    //links the last block to the first new block
+    //copies information from the previous page
+
+    *((kma_page_t**)newPage->ptr) = newPage;
+    pageheader* newPageHead;
+    newPageHead = (pageheader*) (newPage->ptr);
+    newPageHead->ptr = newPage;
+    newPageHead->counter = 0;
+    newPageHead->next = NULL;
+    newPageHead->blockHead = NULL;
+    newPageHead->pageid = 0
+
+
+    //link pages to each other
+    if (globalPtr==NULL)
+    {
+        globalPtr = newPageHead;
+    }
+    else 
+    {
+        pageheader* firstPage = globalPtr;
+        pageheader* previousPage = NULL;
+        while (firstPage!=NULL)
+        {
+            previousPage = firstPage;
+            firstPage = firstPage->nextPage;
+        }
+
+        //now add to next one
+        newPageHead->pageid = previousPage->pageid++;
+        previousPage->next = newPageHead;
+        newPageHead->blockHead = previousPage->blockHead;
+    }
+
+    //add to list a block of size pageSize - header at location page+pageheader
+    addToList((void*)((int)newPageHead+sizeof(pageheader)),(PAGE_SIZE-sizeof(pageheader));
+}
+
 
 void* findFreeBlock(kma_size_t size)
 {
@@ -547,80 +625,147 @@ void addToList(void* ptr,kma_size_t size)
 
     newBlock = (blockheader*) ptr;  
     newBlock->size = size; 
+    newBlock->next = NULL;
+
+    //if the first one in the list. point to that one and return
+    if (current==NULL)
+    { 
+        pageHead->blockHead = newBlock;
+        return;
+    }
+
+    //if before the first entry in the list, add before and connect them
     if (ptr<current)
     {
-        //check if the next one is adjacent and free
-        //if yes, merge them 
-        
-        //no
-      //  newBlock->size = size;
         newBlock->next = current;
         pageHead->blockHead = newBlock;
-        
         return;   
     }
-	bool inPage = false;
-	bool pageVisited = false;
-	//figure out what page your pointer is at
-	 while (!((void*)ptr>(void*)(currentPage) && (void*)ptr < (void*)((int)(currentPage) + PAGE_SIZE)))
-        {
-	    	if (currentPage->next == NULL)
-	    	{
-				break;
-	    	}
-            currentPage = currentPage->next;
-    }
-    while ((pageVisited==false || inPage==true)&&(current!=NULL))
+
+    //ALL OTHER CASES
+    //go through the blocks and find a place to put it
+    bool inPage = false;
+
+    //move through pages to find where the block belongs in the pages
+    while (((void*)ptr >> 13) != ((void*)currentPage >> 13))
     {
-    	if (((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
-    	{
-    		//within the bounds of the page
-    		inPage = true;
-
-    	}
-    	if (inPage==true && !(((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE))))
-    	//if current passed over ptr but previous hasn't 
-    	{
-    		pageVisited = true;
-    		inPage = false;
-    	}
-
-        if (inPage==true && (void*)ptr<(void*)current)
-        {
-
-            //stepped over, now we have previous and next
-            //link them 
-            //printf("\t Found a place to add the block. \n");
-            //size done before
-		//just connect the previous to this one
-		//and this one to the next one
-            newBlock->next = current;
-            previous->next = newBlock;
-	  //  printf("Node at %p with size %d pointing to it is  %p (%p) and from this, next is %p",newBlock,newBlock->size,previous,previous->next,newBlock->next);
-            return;
-        }
-        previous = current;
-        //current = current->next;
-		//printf("Next to look at is %p\n",previous->next);
-		current = previous->next;
+        if (currentPage->next == NULL) {break;}
+        currentPage = currentPage->next;
     }
 
-    //if you reached the end of the list
-    //add it to the end (previous is the tail now)
-    //printf("\t couldn't find a place, put it at the end \n");
+    //now step through until you find out the block that you need
+    //we want to put the block in page currentPage
+    //current has the blockhead
+    while (current!=NULL)
+    {
+        if ( (current>>13) == (ptr>>13) )
+        {
+            inPage = TRUE;
+            pageVisited = TRUE;          
+        }
+        pageheader* cPage = (pageheader*)((current>>13)<<13);
+        pageheader* pPage = (pageheader*)((ptr>>13)<<13);
+
+        if (cPage->pageid > pPage->pageid)
+        {
+            //current passed the page
+            break;
+        }
+
+        if (inPage==TRUE)
+        {
+            //if it's inside the page and current ahead of ptr
+            if (current > ptr)
+            {
+                break;
+            }
+        }
+
+        //otherwise, just keep going through
+        previous = current;
+        current = current->next;
+    }
+
     if (current==NULL)
     {
-    	newBlock->size = size;
-    	newBlock->next = NULL;
-    	previous->next = newBlock;
-    	return;
+        newBlock->size = size;
+        newBlock->next = NULL;
+        previous->next = NULL;
     }
-
-    newBlock->next = current;
-    previous->next = newBlock;
+    else
+    {
+        newBlock->next = current;
+        previous->next = newBlock;
+    }
     return;
-
 }
+
+
+
+
+
+// 	bool inPage = false;
+// 	bool pageVisited = false;
+// 	//figure out what page your pointer is at
+// 	 while (!((void*)ptr>(void*)(currentPage) && (void*)ptr < (void*)((int)(currentPage) + PAGE_SIZE)))
+//         {
+// 	    	if (currentPage->next == NULL)
+// 	    	{
+// 				break;
+// 	    	}
+//             currentPage = currentPage->next;
+//     }
+//     while ((pageVisited==false || inPage==true)&&(current!=NULL))
+//     {
+//     	if (((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE)))
+//     	{
+//     		//within the bounds of the page
+//     		inPage = true;
+
+//     	}
+//     	if (inPage==true && !(((void*)current>(void*)(currentPage) && (void*)current < (void*)((int)(currentPage) + PAGE_SIZE))))
+//     	//if current passed over ptr but previous hasn't 
+//     	{
+//     		pageVisited = true;
+//     		inPage = false;
+//     	}
+
+//         if (inPage==true && (void*)ptr<(void*)current)
+//         {
+
+//             //stepped over, now we have previous and next
+//             //link them 
+//             //printf("\t Found a place to add the block. \n");
+//             //size done before
+// 		//just connect the previous to this one
+// 		//and this one to the next one
+//             newBlock->next = current;
+//             previous->next = newBlock;
+// 	  //  printf("Node at %p with size %d pointing to it is  %p (%p) and from this, next is %p",newBlock,newBlock->size,previous,previous->next,newBlock->next);
+//             return;
+//         }
+//         previous = current;
+//         //current = current->next;
+// 		//printf("Next to look at is %p\n",previous->next);
+// 		current = previous->next;
+//     }
+
+//     //if you reached the end of the list
+//     //add it to the end (previous is the tail now)
+//     //printf("\t couldn't find a place, put it at the end \n");
+//     if (current==NULL)
+//     {
+//     	newBlock->size = size;
+//     	newBlock->next = NULL;
+//     	previous->next = newBlock;
+//     	return;
+//     }
+
+//     newBlock->next = current;
+//     previous->next = newBlock;
+//     return;
+
+// }
 
 void freeMyPage(pageheader* page)
 {
