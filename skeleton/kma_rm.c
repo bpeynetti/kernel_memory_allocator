@@ -120,7 +120,7 @@ void* kma_malloc(kma_size_t size)
     lineCounter++;
     void* returnAddress = NULL;
 
-    printf("THIS IS REQUEST NUMBER %d\n", lineCounter);
+    printf("THIS IS REQUEST NUMBER %d to allocate %d\n", lineCounter,size);
 
 
     if ((size + sizeof(kma_page_t*)) > PAGE_SIZE)
@@ -141,11 +141,15 @@ void* kma_malloc(kma_size_t size)
     }
 
     returnAddress = findFreeBlock(size);
-
     if (returnAddress==NULL)
     {
+	printf("returned null\n");
         new_page(get_page());
     }
+    else 
+{
+return returnAddress;
+}
 
     returnAddress = findFreeBlock(size);
 
@@ -349,6 +353,7 @@ void new_page(kma_page_t* newPage)
 
 void* findFreeBlock(kma_size_t size)
 {
+//    printf("FindFreeBlock starts\n");
     //if there's a list of stuff, look through it and find first fit 
     blockheader* previous = NULL;
     pageheader* pageHead;
@@ -366,14 +371,15 @@ void* findFreeBlock(kma_size_t size)
     while (current!=NULL)
     {
        currentPage = (pageheader*)(((int)current>>13)<<13);
-	   printf("Page looked at: %p and counter is %d\n",currentPage,currentPage->counter);
+//	   printf("Page looked at: %p and counter is %d\n",currentPage,currentPage->counter);
         //now go through the list and find a free block
         if (current->size >= size)
         {
             returnAddr = current;
-            returnPage = (pageheader*)(((int)current>>13)<<13);
-            printf("Will add to page %p (counter: %d + 1)\n",returnPage,returnPage->counter);
-            oldSize = current->size;
+            pageheader* returnPage = (pageheader*)(((int)current>>13)<<13);
+  //          printf("Will add to page %p (counter: %d + 1)\n",returnPage,returnPage->counter);
+        	returnPage->counter++;
+		oldSize = current->size;
 
             //if head of the blocks
             if (previous==NULL)
@@ -395,7 +401,7 @@ void* findFreeBlock(kma_size_t size)
                         pageHead->blockHead = current;
                     }
                     //and return the old address 
-                    return (void*)returnAddr;
+      //              return (void*)returnAddr;
                 }
                 else 
                 {
@@ -418,7 +424,7 @@ void* findFreeBlock(kma_size_t size)
                    	    //add one to page counter
                     }
                     //nothing else to update
-                    return (void*)returnAddr;
+        //            return (void*)returnAddr;
                 }
             }
             else 
@@ -445,12 +451,12 @@ void* findFreeBlock(kma_size_t size)
                     }     
 
                     //and return the old address 
-                    return (void*)returnAddr;
+          //          return (void*)returnAddr;
                 }
                 else 
                 {
                     //normal case, something in front and something behind
-                    returnAddr = current;
+            //        returnAddr = current;
                     //if size of block is within accepted  to size+sizeof(blocknode)
                     if (current->size-size<sizeof(blockheader)) //if the difference between them is smaller than what we need for a new node
                     {
@@ -459,7 +465,7 @@ void* findFreeBlock(kma_size_t size)
                         //take it out of the list
                         previous->next = current->next;
                         //and add 1 more
-                        return (void*)returnAddr;
+              //          return (void*)returnAddr;
                     }
                     else 
                     {
@@ -472,12 +478,13 @@ void* findFreeBlock(kma_size_t size)
                         current->next = tempNext;
                         
                         previous->next = current;
-                        return (void*)returnAddr;
+                //        return (void*)returnAddr;
                     }
                 }
             }
-            printf("Shouldn't get here! \n");
-        }
+    //        printf("Shouldn't get here! , returning %p \n",returnAddr);
+        	return (void*)returnAddr;
+	}
         else 
         {
             //block is not good. step through
@@ -570,7 +577,7 @@ void kma_free(void* ptr, kma_size_t size)
 
 void addToList(void* ptr,kma_size_t size)
 {
-    printf("adding %p of size %d\n",ptr,size);
+   // printf("adding %p of size %d\n",ptr,size);
     blockheader* previous = NULL;
     pageheader* pageHead;
     //it's at the beginning of the list. make it point to the first free node
