@@ -121,9 +121,6 @@ void* kma_malloc(kma_size_t size)
     void* returnAddress = NULL;
 
     printf("THIS IS REQUEST NUMBER %d to allocate %d \n", lineCounter,size);
-    if (size == 3264){
-	printf("here I am");
-}
 
     if ((size + sizeof(kma_page_t*)) > PAGE_SIZE)
     {
@@ -150,12 +147,12 @@ void* kma_malloc(kma_size_t size)
     }
     else 
 {
-//printf("returnAddress %p \n",returnAddress);
+printf("returnAddress %p \n",returnAddress);
 return returnAddress;
 }
 
     returnAddress = findFreeBlock(size);
-//printf("returnaddress: %p \n",returnAddress);
+printf("returnaddress: %p \n",returnAddress);
     return returnAddress;
 
 
@@ -508,7 +505,7 @@ void kma_free(void* ptr, kma_size_t size)
 	lineCounter++;	
 
 	printf("THIS IS REQUEST NUMBER %d to free block %p of size %d\n", lineCounter,ptr,size);
-	if (lineCounter==199995)
+	if (lineCounter>=199985)
 {
 	
   // if(size<16){ size=16; } 
@@ -527,6 +524,15 @@ void kma_free(void* ptr, kma_size_t size)
            currentBlock = currentBlock->next;
         }
         printf("\n");
+
+	printf("Pages:\n");
+	while(firstPage!=NULL){
+		printf("%d (%p) Ctr:%d -> ",firstPage->pageid,firstPage,firstPage->counter);
+		firstPage = firstPage->next;
+	}
+	printf("\n");
+
+
     }
     
     //first need to add the requested memory location to the free list
@@ -616,6 +622,18 @@ blockheader* previous = NULL;
         pageHead->blockHead = newBlock;
         return;
     }
+
+   pageheader* cPage = (pageheader*)(((int)current>>13)<<13);
+   pageheader* pPage = (pageheader*)(((int)ptr>>13)<<13);
+   
+   if (pPage->pageid < cPage->pageid)
+{
+	//first free block is in a page after the one you're trying to free
+	newBlock->next = current;
+	pageHead->blockHead = newBlock;
+	return;
+}
+
 
     //if before the first entry in the list, add before and connect them
     if ((void*)ptr<(void*)current)
