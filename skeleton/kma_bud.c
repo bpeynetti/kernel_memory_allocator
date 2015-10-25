@@ -125,6 +125,7 @@ void* kma_malloc(kma_size_t size)
     printf("REQUEST NUMBER %d TO ALLOCATE BLOCK OF SIZE %d\n",requestNumber,size);
 
     size = adjustSize(size);
+    printf("Adjusted size to: %d\n",size);
     if (size>PAGE_SIZE)
     {
         return NULL;
@@ -193,7 +194,7 @@ void kma_free(void* ptr, kma_size_t size)
     //move on to the list page
     page = page->next;
     //move on to the full page blocks page
-    pageheader* blockPage = (pageheader*)(page->ptrs[7]);
+    pageheader* blockPage = (pageheader*)(page->ptrs[8]);
     blocknode* firstNode = (blocknode*)blockPage->firstBlock;
     //now find it
     while (firstNode->ptr!=ptr)
@@ -260,7 +261,7 @@ void initialize_books()
     firstPageHead->counter=0;
     firstPageHead->firstBlock = NULL;
     int i=0;
-    for (i=0;i<8;i++)
+    for (i=0;i<=8;i++)
     {
         firstPageHead->ptrs[i] = NULL;
     }
@@ -277,7 +278,7 @@ void initialize_books()
     newListPageHead->pType = LISTS;
     newListPageHead->firstBlock = NULL;
     i=0;
-    for (i=0;i<8;i++)
+    for (i=0;i<=8;i++)
     {
         newListPageHead->ptrs[i] = NULL;
     }
@@ -303,7 +304,7 @@ blocknode* getFreeBlock(kma_size_t size)
     //step through size 
     int index = getListIndex(size);
     int origIndex = index;
-    while (index<7)
+    while (index<=7)
     {
         if (page->ptrs[index]!=NULL)
         {
@@ -312,7 +313,7 @@ blocknode* getFreeBlock(kma_size_t size)
         index++;
     }
 
-    if (index==7)
+    if (index==8)
     {
         //did not find a good page
         return NULL;
