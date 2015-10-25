@@ -83,7 +83,7 @@ typedef enum
 typedef struct page_head
 {
     kma_page_t* ptr;
-    void* nextPage;
+    void* next;
     page_type pType;
     void* firstBlock;
     listhead ptrs;
@@ -99,6 +99,20 @@ int requestNumber = 0;
 
 /************Function Prototypes******************************************/
 void initialize_books();
+blocknode* getFreeBlock(kma_page_t size);
+void update_bitmap(void* ptr,kma_size_t size);
+void initialize_books();
+blocknode* getFreeBlock(kma_page_t size);
+int getListIndex(kma_size_t size);
+kma_size_t adjustSize(kma_size_t num);
+blocknode* split_free_to_size(kma_size_t size, blocknode* node);
+void remove_from_list(blocknode* node);
+void fix_pointers();
+blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr);
+void coalesce_blocks(void* ptr,kma_size_t size);
+blocknode* findBlock(void* ptr, kma_size_t size);
+int findBuddy(void* buddyAddr,kma_size_t size);
+
 /************External Declaration*****************************************/
 
 /**************Implementation***********************************************/
@@ -120,7 +134,7 @@ void* kma_malloc(kma_size_t size)
     }
     
     //return address
-    void* returnAdddress;
+    void* returnAddress;
     
     returnAddress = get_free_block(size);
 
@@ -128,7 +142,7 @@ void* kma_malloc(kma_size_t size)
     {
         //found a free block, update the bitmap
         update_bitmap(returnAddress,size);
-        return returnAddress;
+        return returnAddress->ptr;
     }
     
     //did not find a free block
@@ -153,7 +167,7 @@ void* kma_malloc(kma_size_t size)
     {
         //update bitmap, return
         update_bitmap();
-        return returnAddress;
+        return returnAddress->ptr;
     }
     
     //else, not capable of giving that request, return null
@@ -173,11 +187,11 @@ void kma_free(void* ptr, kma_size_t size)
   if (size==PAGE_SIZE){
 
     //figure out the page that will be freed
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);    
+    pageheader* page = (pageheader*)(globalPtr->ptr);    
     //move on to the list page
     page = page->next;
     //move on to the full page blocks page
-    page = (pageheader*)(page->ptrs[7]);
+    pageheader* page = (pageheader*)(page->ptrs[7]);
     blocknode* firstNode = page->firstBlock;
     //now find it
     while (firstNode->ptr!=ptr)
@@ -202,7 +216,7 @@ void kma_free(void* ptr, kma_size_t size)
 
 void update_bitmap(void* ptr,kma_size_t size)
 {
- return;   
+    return;   
 }
 
 void initialize_books()
@@ -218,7 +232,7 @@ void initialize_books()
     *((kma_page_t**)newFirstPage->ptr) = newFirstPage;
     globalPtr = (kma_page_t*)(newFirstPage->ptr);
 
-    newFirstPage->nextPage = NULL;
+    newFirstPage->next = NULL;
     newFirstPage->type = BITMAP;
     newFirstPage->counter=0;
     newFirstPage->firstBlock = NULL;
@@ -228,18 +242,18 @@ void initialize_books()
     kma_page_t* newListPage = get_page();
     *((kma_page_t**)newListPage->ptr) = newListPage;
     
-    newListPage->nextPage = NULL;
+    newListPage->next = NULL;
     newListPage->counter=0;
     newListPage->type = LISTS;
     newListPage->firstBlock = NULL;
-    
-    for (int i=0;i<8;i++)
+    int i=0;
+    for (i=0;i<8;i++)
     {
         newListPage->ptrs[i] = NULL;
     }
     
     //make them connected
-    newFirstPage->nextPage = newListPage;
+    newFirstPage->next = newListPage;
     
     printf("bitmap page: %p\n",newFirstPage);
     printf("list page: %p\n",newListPage);
@@ -249,7 +263,7 @@ void initialize_books()
 blocknode* getFreeBlock(kma_page_t size)
 {
     //walk through the blocks until you find one that fits
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);    
+    pagehader* page = (pageheader*)(globalPtr->ptr);    
 
     //move on to the list page
     page = page->next;
@@ -291,11 +305,11 @@ blocknode* getFreeBlock(kma_page_t size)
 int getListIndex(kma_size_t size)
 {
     //gets log base 2 and decreases 5 (32 byte minimum)
-    kma_size_t start = num;
+    kma_size_t start = size;
     kma_size_t result = 0;
     while (start > 1)
     {
-        result++
+        result++;
         start >> 1; 
     }
     return result-5;
@@ -305,7 +319,7 @@ int getListIndex(kma_size_t size)
 
 kma_size_t adjustSize(kma_size_t num)
 {
-    power = num - 1;
+    kma_size_t power = num - 1;
     power |= power >> 1;
     power |= power >> 2;
     power |= power >> 4;
@@ -344,7 +358,7 @@ void remove_from_list(blocknode* node)
 {
     //removes a block from a list of just the block that we have, does not coalesce. just remove
     int listIndex = getListIndex(node->size);
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);    
+    pageheader* page = (pageheader*)(globalPtr->ptr);    
 
     //move to list page
     page = page->next;
@@ -405,7 +419,7 @@ void remove_from_list(blocknode* node)
 void fix_pointers()
 {
     //steps through the list and fixes any pointers that we did not align 
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);
+    pageheader* page = (pageheader*)(globalPtr->ptr);
     page = page->next;
     blocknode* firstNode = (blocknode*) (page->firstBlock);
     blocknode* current = firstNode;
@@ -440,7 +454,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 {
     //add to end of the list of its size 
     int listIndex = getListIndex(size);
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);    
+    pageheader* page = (pageheader*)(globalPtr->ptr);    
 
     //move to list page
     page = page->next;
@@ -454,7 +468,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         kma_page_t* newListPage = get_page();
         *((kma_page_t**)newListPage->ptr) = newListPage;
         
-        newListPage->nextPage = NULL;
+        newListPage->next = NULL;
         newListPage->counter=0;
         newListPage->type = LISTS;
         newListPage->firstBlock = (void*)((int)newListPage + sizeof(pageheader));; 
@@ -548,7 +562,7 @@ void coalesce_blocks(void* ptr,kma_size_t size)
 blocknode* findBlock(void* ptr, kma_size_t size)
 {
     int listIndex = getListIndex(size);
-    kma_page_t* page = (kma_page_t*)(globalPtr->ptr);    
+    pageheader* page = (pageheader*)(globalPtr->ptr);    
 
     //move to list page
     page = page->next;
