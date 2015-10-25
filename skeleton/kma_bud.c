@@ -153,7 +153,7 @@ void* kma_malloc(kma_size_t size)
         //add that as a 'free block' to blocks of size PAGESIZE
         //and return that
         kma_page_t* newFirstPage = get_page();
-        addtoList(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
+        add_to_List(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
 
         return newFirstPage->ptr;
     }
@@ -207,12 +207,31 @@ void kma_free(void* ptr, kma_size_t size)
   
 
   coalesce_blocks(ptr,size);
-  
-  add_to_free_list(ptr,size);
-  
+    
   free_pages();
 
 }
+
+void free_pages()
+{
+    printf("should be scanning bitmap by page and deleting pages as needed\n");
+}
+
+void allocate_new_page()
+{
+    //allocates new page split in 2 blocks of PAGE_SIZE/2
+
+    kma_page_t* newPage = get_page();
+    
+    (void*)leftChildAddr = newPage->ptr;
+    (void*)rightChildAddr = (void*) ((int)(newPage->ptr)+(PAGE_SIZE/2));
+
+    add_to_list(leftchildAddr,PAGE_SIZE/2,newPage);
+    add_to_list(rightChildAddr,PAGE_SIZE/2,newPage);
+    return;
+
+}
+
 
 void update_bitmap(void* ptr,kma_size_t size)
 {
@@ -227,36 +246,40 @@ void initialize_books()
     //get a page for bitmap 
     
     kma_page_t* newFirstPage = get_page();
+    pageheader* firstPageHead;
 
     //put it in the first place 
     *((kma_page_t**)newFirstPage->ptr) = newFirstPage;
     globalPtr = (kma_page_t*)(newFirstPage->ptr);
 
-    newFirstPage->next = NULL;
-    newFirstPage->type = BITMAP;
-    newFirstPage->counter=0;
-    newFirstPage->firstBlock = NULL;
-    newFirstPage->pointers = NULL;
+    firstPageHead = newFirstPage->ptr;
+    firstPageHead->next = NULL;
+    firstPageHead->type = BITMAP;
+    firstPageHead->counter=0;
+    firstPageHead->firstBlock = NULL;
+    firstPageHead->pointers = NULL;
     
 
     kma_page_t* newListPage = get_page();
     *((kma_page_t**)newListPage->ptr) = newListPage;
     
-    newListPage->next = NULL;
-    newListPage->counter=0;
-    newListPage->type = LISTS;
-    newListPage->firstBlock = NULL;
+    pageheader* newListPageHead = newListPage->ptr;
+
+    newListPageHead->next = NULL;
+    newListPageHead->counter=0;
+    newListPageHead->type = LISTS;
+    newListPageHead->firstBlock = NULL;
     int i=0;
     for (i=0;i<8;i++)
     {
-        newListPage->ptrs[i] = NULL;
+        newListPageHead->ptrs[i] = NULL;
     }
     
     //make them connected
-    newFirstPage->next = newListPage;
+    firstPageHead->next = newListPageHead;
     
-    printf("bitmap page: %p\n",newFirstPage);
-    printf("list page: %p\n",newListPage);
+    printf("bitmap page: %p\n",firstPageHead);
+    printf("list page: %p\n",newListPageHead);
     return;
 }
 
@@ -468,10 +491,12 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         kma_page_t* newListPage = get_page();
         *((kma_page_t**)newListPage->ptr) = newListPage;
         
-        newListPage->next = NULL;
-        newListPage->counter=0;
-        newListPage->type = LISTS;
-        newListPage->firstBlock = (void*)((int)newListPage + sizeof(pageheader));; 
+        pagehead* newListPageHead = newListPage->ptr;
+
+        newListPageHead->next = NULL;
+        newListPageHead->counter=0;
+        newListPageHead->type = LISTS;
+        newListPageHead->firstBlock = (void*)((int)newListPageHead + sizeof(pageheader));; 
 
         //and put the first node in the list
         firstBlock->ptr = ptr;
