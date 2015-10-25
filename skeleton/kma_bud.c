@@ -86,7 +86,8 @@ typedef struct page_head
     void* next;
     page_type pType;
     void* firstBlock;
-    listhead ptrs;
+    pageheader* ptrs[8];
+    int counter;
 } pageheader;
 
 
@@ -99,10 +100,10 @@ int requestNumber = 0;
 
 /************Function Prototypes******************************************/
 void initialize_books();
+void allocate_new_page();
 blocknode* getFreeBlock(kma_page_t size);
 void update_bitmap(void* ptr,kma_size_t size);
 void initialize_books();
-blocknode* getFreeBlock(kma_page_t size);
 int getListIndex(kma_size_t size);
 kma_size_t adjustSize(kma_size_t num);
 blocknode* split_free_to_size(kma_size_t size, blocknode* node);
@@ -112,6 +113,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr);
 void coalesce_blocks(void* ptr,kma_size_t size);
 blocknode* findBlock(void* ptr, kma_size_t size);
 int findBuddy(void* buddyAddr,kma_size_t size);
+void free_pages();
 
 /************External Declaration*****************************************/
 
@@ -134,9 +136,9 @@ void* kma_malloc(kma_size_t size)
     }
     
     //return address
-    void* returnAddress;
+    blocknode* returnAddress;
     
-    returnAddress = get_free_block(size);
+    returnAddress = getFreeBlock(size);
 
     if (returnAddress!=NULL)
     {
@@ -153,7 +155,7 @@ void* kma_malloc(kma_size_t size)
         //add that as a 'free block' to blocks of size PAGESIZE
         //and return that
         kma_page_t* newFirstPage = get_page();
-        add_to_List(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
+        add_to_list(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
 
         return newFirstPage->ptr;
     }
@@ -166,7 +168,7 @@ void* kma_malloc(kma_size_t size)
     if (returnAddress!=NULL)
     {
         //update bitmap, return
-        update_bitmap();
+        update_bitmap(returnAddress,size);
         return returnAddress->ptr;
     }
     
@@ -191,8 +193,8 @@ void kma_free(void* ptr, kma_size_t size)
     //move on to the list page
     page = page->next;
     //move on to the full page blocks page
-    pageheader* page = (pageheader*)(page->ptrs[7]);
-    blocknode* firstNode = page->firstBlock;
+    pageheader* blockPage = (pageheader*)(page->ptrs[7]);
+    blocknode* firstNode = (blocknode*)blockPage->firstBlock;
     //now find it
     while (firstNode->ptr!=ptr)
     {
@@ -223,10 +225,10 @@ void allocate_new_page()
 
     kma_page_t* newPage = get_page();
     
-    (void*)leftChildAddr = newPage->ptr;
-    (void*)rightChildAddr = (void*) ((int)(newPage->ptr)+(PAGE_SIZE/2));
+    void* leftChildAddr = newPage->ptr;
+    void* rightChildAddr = (void*) ((int)(newPage->ptr)+(PAGE_SIZE/2));
 
-    add_to_list(leftchildAddr,PAGE_SIZE/2,newPage);
+    add_to_list(leftChildAddr,PAGE_SIZE/2,newPage);
     add_to_list(rightChildAddr,PAGE_SIZE/2,newPage);
     return;
 
@@ -240,7 +242,7 @@ void update_bitmap(void* ptr,kma_size_t size)
 
 void initialize_books()
 {
-    int usablePageSize = (unsigned int)PAGESIZE - sizeof(kma_page_t) - sizeof(page_t) - sizeof(listhead);
+    //int usablePageSize = (unsigned int)PAGESIZE - sizeof(kma_page_t) - sizeof(page_t) - sizeof(listhead);
     //there is nothing here yet
     
     //get a page for bitmap 
@@ -254,10 +256,15 @@ void initialize_books()
 
     firstPageHead = newFirstPage->ptr;
     firstPageHead->next = NULL;
-    firstPageHead->type = BITMAP;
+    firstPageHead->pType = BITMAP;
     firstPageHead->counter=0;
     firstPageHead->firstBlock = NULL;
-    firstPageHead->pointers = NULL;
+    int i=0;
+    for (i=0;i<8;i++)
+    {
+        firstPageHead->ptrs[i] = NULL;
+    }
+    // firstPageHead->ptrs = NULL;
     
 
     kma_page_t* newListPage = get_page();
@@ -267,9 +274,9 @@ void initialize_books()
 
     newListPageHead->next = NULL;
     newListPageHead->counter=0;
-    newListPageHead->type = LISTS;
+    newListPageHead->pType = LISTS;
     newListPageHead->firstBlock = NULL;
-    int i=0;
+    i=0;
     for (i=0;i<8;i++)
     {
         newListPageHead->ptrs[i] = NULL;
@@ -283,7 +290,7 @@ void initialize_books()
     return;
 }
 
-blocknode* getFreeBlock(kma_page_t size)
+blocknode* getFreeBlock(kma_size_t size)
 {
     //walk through the blocks until you find one that fits
     pagehader* page = (pageheader*)(globalPtr->ptr);    
@@ -314,14 +321,15 @@ blocknode* getFreeBlock(kma_page_t size)
     if (index==origIndex)
     {
         //go into that page
-        pageheader* page = (pageheader*)(page->ptrs[index]);
-        return (blocknode*)(page->firstBlock);
+        pageheader* blockPage = (pageheader*)(page->ptrs[index]);
+        return (blocknode*)(blockPage->firstBlock);
     }
     else
     {
         //split into blocks and then return
         return split_free_to_size(size,(blocknode*)(page->ptrs[index]));
     }
+    return NULL;
     
 }
 
@@ -333,7 +341,7 @@ int getListIndex(kma_size_t size)
     while (start > 1)
     {
         result++;
-        start >> 1; 
+        start = start >> 1; 
     }
     return result-5;
     
@@ -366,7 +374,7 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node)
         //node is too big
         //make children and recurse on left child
         void* leftChild = (void*)(node->ptr);
-        void* rightchild = (void*)((int)(leftChild) + ((int)node->size)/2);
+        void* rightChild = (void*)((int)(leftChild) + ((int)node->size)/2);
         kma_page_t* childrenPage = (kma_page_t*)(node->pagePtr);
         kma_size_t childrenSize = node->size/2;
         remove_from_list(node);
@@ -385,7 +393,8 @@ void remove_from_list(blocknode* node)
 
     //move to list page
     page = page->next;
-    blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
+    pageheader* blockPage = (pagheader*)(page->ptrs[listIndex]);
+    blocknode* firstNode = (blocknode*)(blockPage->firstBlock);
     blocknode* current = firstNode;
     
     if (current==NULL)
@@ -398,7 +407,7 @@ void remove_from_list(blocknode* node)
 
     while (current!=node)
     {
-        previous = previous->current;
+        previous = current;
         current = current->next;
     }
 
@@ -441,35 +450,36 @@ void remove_from_list(blocknode* node)
 
 void fix_pointers()
 {
-    //steps through the list and fixes any pointers that we did not align 
-    pageheader* page = (pageheader*)(globalPtr->ptr);
-    page = page->next;
-    blocknode* firstNode = (blocknode*) (page->firstBlock);
-    blocknode* current = firstNode;
+    // //steps through the list and fixes any pointers that we did not align 
+    // pageheader* page = (pageheader*)(globalPtr->ptr);
+    // page = page->next;
+    // blocknode* firstNode = (blocknode*) (page->firstBlock);
+    // blocknode* current = firstNode;
 
-    int nodeSize;
-    int listIndex;
-    int oldSize = 0;
-    int marked[8] = {0,0,0,0,0,0,0,0};
-    while (current!=NULL)
-    {
-        if (current->size != oldSize)
-        {
-            //get list index
-            listIndex = getListIndex(current->size);
-            page->ptrs[listIndex] = (void*)current;
-            oldSize = current->size;
-            marked[listIndex] = 1;
-        }
-    }
-    //set to null if not in the list
-    for (int i=0;i<8;i++)
-    {
-        if (marked[listIndex]==0)
-        {
-            page->ptrx[listIndex] = NULL;
-        }
-    }
+    // int nodeSize;
+    // int listIndex;
+    // int oldSize = 0;
+    // int marked[8] = {0,0,0,0,0,0,0,0};
+    // while (current!=NULL)
+    // {
+    //     if (current->size != oldSize)
+    //     {
+    //         //get list index
+    //         listIndex = getListIndex(current->size);
+    //         page->ptrs[listIndex] = (void*)current;
+    //         oldSize = current->size;
+    //         marked[listIndex] = 1;
+    //     }
+    // }
+    // //set to null if not in the list
+    // for (int i=0;i<8;i++)
+    // {
+    //     if (marked[listIndex]==0)
+    //     {
+    //         page->ptrx[listIndex] = NULL;
+    //     }
+    // }
+    return;
 }
 
 
@@ -491,14 +501,15 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         kma_page_t* newListPage = get_page();
         *((kma_page_t**)newListPage->ptr) = newListPage;
         
-        pagehead* newListPageHead = newListPage->ptr;
+        pagehead* newListPageHead = (pageheader*)newListPage->ptr;
 
         newListPageHead->next = NULL;
         newListPageHead->counter=0;
-        newListPageHead->type = LISTS;
+        newListPageHead->pType = LISTS;
         newListPageHead->firstBlock = (void*)((int)newListPageHead + sizeof(pageheader));; 
 
         //and put the first node in the list
+        blocknode* firstBlock = newPageHead->firstBlock;
         firstBlock->ptr = ptr;
         firstBlock->size = size;
         firstBlock->next = NULL;
