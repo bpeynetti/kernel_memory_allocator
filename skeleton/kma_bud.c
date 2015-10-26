@@ -223,7 +223,33 @@ void kma_free(void* ptr, kma_size_t size)
 
 void free_pages()
 {
+
+    
     printf("should be scanning bitmap by page and deleting pages as needed\n");
+
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    printf("Bitmap page at %p \n ",page);
+    page = page->next;
+    printf("Lists page at %p \n ",page);
+    printf("Printing lists: \n");
+
+    int j=0;
+    for (j=0;j<9;j++)
+    {
+        printf("\t %d -> %p \n",j,page->ptrs[j]);
+        if (page->ptrs[j]!=NULL)
+        {
+            pageheader* blockPage = (pageheader*)(page->ptrs[j]);
+            blocknode* current = blockPage->firstBlock;
+            while (current!=NULL)
+            {
+                printf(" %p -> ",current);
+                current = current->next;
+            }
+        }
+    }
+
+
 }
 
 void allocate_new_page()
@@ -592,82 +618,82 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
         //just take this block out of the list
         //find the block in the list of blocks
        if (fromRecursion==0)
-{
-	return;
-}
-else
-{
+        {
+	       return;
+        }
+        else
+        {
 
-	 blocknode* node = findBlock(ptr,size);
-        //and remove from list(block)
-        remove_from_list(node);
-        return;
-}
+    	    blocknode* node = findBlock(ptr,size);
+            //and remove from list(block)
+            remove_from_list(node);
+            return;
+        }
     }
     
     if (fBuddy==1)
     {
-//	printf("found buddy \n");
+        //	printf("found buddy \n");
         //coalesce these 2 and remove from list
         //find one
        //no need to find this one because it's not there! looking for its buddy so must be free
-	if (fromRecursion==0)
-{
-	 //blocknode* node = findBlock(ptr,size);
-        //find the other
-        blocknode* buddy = findBlock(buddyAddr,size);
-//	printf("buddy address is %p \n",buddy);
-        //if size is PAGE_SIZE
-        if (buddy->size*2 == PAGE_SIZE)
+	   if (fromRecursion==0)
         {
-            //delete and free the page
-            kma_page_t* pagePtr = buddy->pagePtr;
-            free_page(pagePtr);
-          //  remove_from_list(node);
-	//remove the buddy
-            remove_from_list(buddy);
-            return;
-        }
-        else
-        {
-            //add a new one to list
-            void* lowerAddress = ptr;
-            if (ptr > buddy->ptr)
+        	 //blocknode* node = findBlock(ptr,size);
+            //find the other
+            blocknode* buddy = findBlock(buddyAddr,size);
+            //	printf("buddy address is %p \n",buddy);
+            //if size is PAGE_SIZE
+            if (buddy->size*2 == PAGE_SIZE)
             {
-                lowerAddress = buddy->ptr;
+                //delete and free the page
+                kma_page_t* pagePtr = buddy->pagePtr;
+                free_page(pagePtr);
+                //  remove_from_list(node);
+	           //remove the buddy
+                remove_from_list(buddy);
+                return;
             }
-            //add to list
-//		printf("adding to list node of size %d*2 at %p \n",buddy->size,lowerAddress);
-            blocknode* parentNode = add_to_list(lowerAddress, buddy->size*2, buddy->pagePtr);
-            //and remove previous ones from list
-		//remove only the buddy
-            //remove_from_list(node);
-            remove_from_list(buddy);
+            else
+            {
+                //add a new one to list
+                void* lowerAddress = ptr;
+                if (ptr > buddy->ptr)
+                {
+                   lowerAddress = buddy->ptr;
+                }
+                    //add to list
+        //		printf("adding to list node of size %d*2 at %p \n",buddy->size,lowerAddress);
+                blocknode* parentNode = add_to_list(lowerAddress, buddy->size*2, buddy->pagePtr);
+                //and remove previous ones from list
+		          //remove only the buddy
+                //remove_from_list(node);
+                remove_from_list(buddy);
 
-            return coalesce_blocks(parentNode->ptr,parentNode->size,1);
+                return coalesce_blocks(parentNode->ptr,parentNode->size,1);
+            }
+        }   
+        else {
+        	blocknode* node = findBlock(ptr,size);
+        	blocknode* buddy = findBlock(buddyAddr,size);// printf("buddy address is %p \n",buddy);
+        	if (buddy->size*2==PAGE_SIZE) {
+		      free_page(buddy->pagePtr);
+		      remove_from_list(node);
+		      remove_from_list(buddy);
+		      return;
+	        }
+	        else {
+                void* lowerAddress = ptr;
+                if (ptr>buddy->ptr) {
+                    lowerAddress = buddy->ptr;
+                }
+                //		printf("Adding to list node of size %d*2 at %p \n",buddy->size,lowerAddress);
+        		blocknode* parentNode = add_to_list(lowerAddress,buddy->size*2,buddy->pagePtr);
+        		remove_from_list(node);
+        		remove_from_list(buddy);
+        		return coalesce_blocks(parentNode->ptr,parentNode->size,1);
+	       }
         }
-}
-else {
-	blocknode* node = findBlock(ptr,size);
-	blocknode* buddy = findBlock(buddyAddr,size);// printf("buddy address is %p \n",buddy);
-	if (buddy->size*2==PAGE_SIZE) {
-		free_page(buddy->pagePtr);
-		remove_from_list(node);
-		remove_from_list(buddy);
-		return;
-	}
-	else {
-		void* lowerAddress = ptr;
-		if (ptr>buddy->ptr) {
-			lowerAddress = buddy->ptr;
-		}
-//		printf("Adding to list node of size %d*2 at %p \n",buddy->size,lowerAddress);
-		blocknode* parentNode = add_to_list(lowerAddress,buddy->size*2,buddy->pagePtr);
-		remove_from_list(node);
-		remove_from_list(buddy);
-		return coalesce_blocks(parentNode->ptr,parentNode->size,1);
-	}
-}
     }
 }
 
