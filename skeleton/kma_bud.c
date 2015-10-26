@@ -156,6 +156,8 @@ void* kma_malloc(kma_size_t size)
     
     returnAddress = getFreeBlock(size);
 
+    printf("RETURN ADDRESS %p\n", returnAddress);
+
     if (returnAddress!=NULL)
     {
 	printf("RETURN ADDRESS IS ----------------------->>>>> %p\n",returnAddress->ptr);
@@ -174,8 +176,8 @@ void* kma_malloc(kma_size_t size)
         //add that as a 'free block' to blocks of size PAGESIZE
         //and return that
         kma_page_t* newFirstPage = get_page();
-        add_to_list(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
-
+        //add_to_list(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
+	addPageNode(newFirstPage->ptr,(void*)newFirstPage);
         return newFirstPage->ptr;
     }
 
@@ -211,21 +213,21 @@ void kma_free(void* ptr, kma_size_t size)
   if (size==PAGE_SIZE){
     
         //figure out the page that will be freed
-        pageheader* page = (pageheader*)(globalPtr->ptr);    
+        //pageheader* page = (pageheader*)(globalPtr->ptr);    
         //move on to the list page
-        page = page->next;
+        //page = page->next;
         //move on to the full page blocks page
-        pageheader* blockPage = (pageheader*)(page->ptrs[8]);
-        blocknode* firstNode = (blocknode*)blockPage->firstBlock;
+        //pageheader* blockPage = (pageheader*)(page->ptrs[8]);
+        //blocknode* firstNode = (blocknode*)blockPage->firstBlock;
         //now find it
-        while (firstNode->ptr!=ptr)
-        {
-            firstNode = firstNode->next;
-        }
+        //while (firstNode->ptr!=ptr)
+        //{
+        //    firstNode = firstNode->next;
+        //}
     
         //remove it as if it was a free node
-        void* pagePtr = (void*)(firstNode->pagePtr);
-        remove_from_list(firstNode);
+        void* pagePtr = (void*)(findPagePtr(ptr));;
+        remove_from_pagelist(pagePtr);
         free_page(pagePtr);
         //update_bitmap(ptr,size);
         free_pages();
@@ -589,20 +591,39 @@ void remove_from_list(blocknode* node)
         //block to remove is at previous, and step through
         while(current!=NULL)
         {
+
+	    printf("The previous pointer is %p\n", previous->ptr);
+	    printf("Previous->next is %p\n", previous->next);
+	    printf("The current pointer is %p\n", current->ptr);
+	    printf("Current is %p\n", current);
+
             //copy the block node in front to the back
             previous->size = current->size;
             previous->ptr = current->ptr;
-            previous->next = current->next;
+            //previous->next = current->next;
             previous->pagePtr = current->pagePtr;
+	    
+	    printf("The previous pointer is now %p\n", previous->ptr);
+	    printf("Previous->next is %p\n", previous->next);
+	    printf("The current pointer is now %p\n", current->ptr);
+	    printf("Current is %p\n", current);    
 
-
-            //and step to the next element
-            previous = current;
+	    if (current->next == NULL)
+	    {
+	    	previous->next = NULL;
+	    }
+	    else
+	    {
+		previous = current;
+	    }
             current = current->next;
+	    
+	    
         }
 
         //fix pointers
         //fix_pointers();
+	previous->next = NULL;
 	return;
     }
    //last case, it's the last one but not the first one
@@ -919,11 +940,17 @@ void addPageNode(void* ptr,void* pagePtr)
     }
 	else
 	{
+	int count = 0;
     	while (currentPageNode!=NULL)
     	{
+		count++;
+		printf("%d pages\n", count);
         	previousPageNode = currentPageNode;
         	currentPageNode = currentPageNode->next;
     	}
+
+	printf("Do we get here?\n");
+
     	//at the tail now
     	previousPageNode->next = (pagenode*)((int)(previousPageNode) + sizeof(pagenode));
     	pagenode* newPageNode = previousPageNode->next;
@@ -981,7 +1008,7 @@ void remove_from_pagelist(void* pagePtr)
     	{
         	//copy the block node in front to the back
         	previousPageNode->ptr = currentPageNode->ptr;
-        	previousPageNode->next = currentPageNode->next;
+        	//previousPageNode->next = currentPageNode->next;
         	previousPageNode->pagePtr = currentPageNode->pagePtr;
         	int j=0;
         	for (j=0;j<32;j++)
@@ -989,9 +1016,14 @@ void remove_from_pagelist(void* pagePtr)
             	previousPageNode->bitmap[j] = currentPageNode->bitmap[j];
         	}
 
-
-        	//and step to the next element
-        	previousPageNode = currentPageNode;
+		if (currentPageNode->next == NULL)
+		{
+		    previousPageNode->next = NULL;
+		}
+		else
+		{
+		    previousPageNode = currentPageNode;
+		}
         	currentPageNode = currentPageNode->next;
     	}
 

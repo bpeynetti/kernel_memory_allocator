@@ -12,103 +12,167 @@ Pointer 5 location is (nil)
 Pointer 6 location is (nil) 
 Pointer 7 location is (nil) 
 Pointer 8 location is (nil) 
-global Ptr points to : 0xb55fc000
-bitmap page: 0xb55fc000 points to (nil) 
-bitmap page: 0xb55fc000 points to : (nil) 
-global ptr points to 0xb55fc000 
+global Ptr points to : 0xb55f0000
+bitmap page: 0xb55f0000 points to (nil) 
+bitmap page: 0xb55f0000 points to : (nil) 
+global ptr points to 0xb55f0000 
 END OF INITIALIZING BOOK KEEPING -----------------
 
-adding page node for the page located at 0xb55fe000 
-empty list starts at 0xb55fc03c 
-added page node at 0xb55fc03c and pagePtr points to 0xa038580 
-removing node 0xb560003c of size 4096 
-removing node 0xb560203c of size 2048 
-removing node 0xb560403c of size 1024 
-removing node 0xb560603c of size 512 
-removing node 0xb560803c of size 256 
-removing node 0xb560a03c of size 128 
-removing node 0xb560c03c of size 64 
-RETURN ADDRESS IS ----------------------->>>>>0xb560e03c-> 0xb55fe000
-removing node 0xb560e03c of size 32 
+adding page node for the page located at 0xb55f2000 
+empty list starts at 0xb55f003c 
+added page node at 0xb55f003c and pagePtr points to 0x8e42580 
+removing node 0xb55f403c of size 4096 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f413c
+The current pointer is 0xb55f3000
+Current is 0xb55f413c
+The previous pointer is now 0xb55f3000
+Previous->next is 0xb55f413c
+The current pointer is now 0xb55f3000
+Current is 0xb55f413c
+removing node 0xb55f603c of size 2048 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f613c
+The current pointer is 0xb55f2800
+Current is 0xb55f613c
+The previous pointer is now 0xb55f2800
+Previous->next is 0xb55f613c
+The current pointer is now 0xb55f2800
+Current is 0xb55f613c
+removing node 0xb55f803c of size 1024 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f813c
+The current pointer is 0xb55f2400
+Current is 0xb55f813c
+The previous pointer is now 0xb55f2400
+Previous->next is 0xb55f813c
+The current pointer is now 0xb55f2400
+Current is 0xb55f813c
+removing node 0xb55fa03c of size 512 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fa13c
+The current pointer is 0xb55f2200
+Current is 0xb55fa13c
+The previous pointer is now 0xb55f2200
+Previous->next is 0xb55fa13c
+The current pointer is now 0xb55f2200
+Current is 0xb55fa13c
+removing node 0xb55fc03c of size 256 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fc13c
+The current pointer is 0xb55f2100
+Current is 0xb55fc13c
+The previous pointer is now 0xb55f2100
+Previous->next is 0xb55fc13c
+The current pointer is now 0xb55f2100
+Current is 0xb55fc13c
+removing node 0xb55fe03c of size 128 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fe13c
+The current pointer is 0xb55f2080
+Current is 0xb55fe13c
+The previous pointer is now 0xb55f2080
+Previous->next is 0xb55fe13c
+The current pointer is now 0xb55f2080
+Current is 0xb55fe13c
+removing node 0xb560003c of size 64 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb560013c
+The current pointer is 0xb55f2040
+Current is 0xb560013c
+The previous pointer is now 0xb55f2040
+Previous->next is 0xb560013c
+The current pointer is now 0xb55f2040
+Current is 0xb560013c
+RETURN ADDRESS IS ----------------------->>>>>0xb560203c-> 0xb55f2000
+removing node 0xb560203c of size 32 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb560213c
+The current pointer is 0xb55f2020
+Current is 0xb560213c
+The previous pointer is now 0xb55f2020
+Previous->next is 0xb560213c
+The current pointer is now 0xb55f2020
+Current is 0xb560213c
 
 
- REQUEST NUMBER 2 TO FREE BLOCK 0xb55fe000  OF SIZE 31
+ REQUEST NUMBER 2 TO FREE BLOCK 0xb55f2000  OF SIZE 31
 coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe000 and of size: 32 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 32 
 found buddy 
-removing node 0xb560e03c of size 32 
+removing node 0xb560203c of size 32 
 *** freeing page for lists of size 0
-trying to coalesce a block at ptr 0xb55fe000 and of size: 64 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 64 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 64*2 at 0xb55fe000 
-removing node 0xb560c13c of size 64 
-removing node 0xb560c03c of size 64 
+Adding to list node of size 64*2 at 0xb55f2000 
+removing node 0xb560013c of size 64 
+removing node 0xb560003c of size 64 
 *** freeing page for lists of size 1
-trying to coalesce a block at ptr 0xb55fe000 and of size: 128 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 128 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 128*2 at 0xb55fe000 
-removing node 0xb560a13c of size 128 
-removing node 0xb560a03c of size 128 
+Adding to list node of size 128*2 at 0xb55f2000 
+removing node 0xb55fe13c of size 128 
+removing node 0xb55fe03c of size 128 
 *** freeing page for lists of size 2
-trying to coalesce a block at ptr 0xb55fe000 and of size: 256 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 256 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 256*2 at 0xb55fe000 
-removing node 0xb560813c of size 256 
-removing node 0xb560803c of size 256 
+Adding to list node of size 256*2 at 0xb55f2000 
+removing node 0xb55fc13c of size 256 
+removing node 0xb55fc03c of size 256 
 *** freeing page for lists of size 3
-trying to coalesce a block at ptr 0xb55fe000 and of size: 512 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 512 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 512*2 at 0xb55fe000 
-removing node 0xb560613c of size 512 
-removing node 0xb560603c of size 512 
+Adding to list node of size 512*2 at 0xb55f2000 
+removing node 0xb55fa13c of size 512 
+removing node 0xb55fa03c of size 512 
 *** freeing page for lists of size 4
-trying to coalesce a block at ptr 0xb55fe000 and of size: 1024 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 1024 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 1024*2 at 0xb55fe000 
-removing node 0xb560413c of size 1024 
-removing node 0xb560403c of size 1024 
+Adding to list node of size 1024*2 at 0xb55f2000 
+removing node 0xb55f813c of size 1024 
+removing node 0xb55f803c of size 1024 
 *** freeing page for lists of size 5
-trying to coalesce a block at ptr 0xb55fe000 and of size: 2048 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 2048 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-Adding to list node of size 2048*2 at 0xb55fe000 
-removing node 0xb560213c of size 2048 
-removing node 0xb560203c of size 2048 
+Adding to list node of size 2048*2 at 0xb55f2000 
+removing node 0xb55f613c of size 2048 
+removing node 0xb55f603c of size 2048 
 *** freeing page for lists of size 6
-trying to coalesce a block at ptr 0xb55fe000 and of size: 4096 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 4096 
 found buddy 
 looking for block 
 looking for buddy 
 evaluating on size to free page or add to list 
-freeing page of buddy 0xb560003c  at ptr 0xa038580 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-Freeing page with pagePtr: 0xa038580 
+freeing page of buddy 0xb55f403c  at ptr 0x8e42580 
+Page to find: 0xb55f2000 
+firstPage: 0xb55f003c currentPage: 0xb55f2000 and looking for 0xb55f2000 
+found page, points to 0x8e42580 
+Freeing page with pagePtr: 0x8e42580 
 removing pageNode 
-removing node 0xb560013c of size 4096 
-removing node 0xb560003c of size 4096 
+removing node 0xb55f413c of size 4096 
+removing node 0xb55f403c of size 4096 
 *** freeing page for lists of size 7
 should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
+Bitmap page at 0xb55f0000 
+ Lists page at 0xb55f0000 
  Printing lists: 
 	 0 -> (nil) 
 	 1 -> (nil) 
@@ -133,721 +197,316 @@ Pointer 5 location is (nil)
 Pointer 6 location is (nil) 
 Pointer 7 location is (nil) 
 Pointer 8 location is (nil) 
-global Ptr points to : 0xb55fc000
-bitmap page: 0xb55fc000 points to (nil) 
-bitmap page: 0xb55fc000 points to : (nil) 
-global ptr points to 0xb55fc000 
+global Ptr points to : 0xb55f0000
+bitmap page: 0xb55f0000 points to (nil) 
+bitmap page: 0xb55f0000 points to : (nil) 
+global ptr points to 0xb55f0000 
 END OF INITIALIZING BOOK KEEPING -----------------
 
-adding page node for the page located at 0xb55fe000 
-empty list starts at 0xb55fc03c 
-added page node at 0xb55fc03c and pagePtr points to 0xa038580 
-removing node 0xb560003c of size 4096 
-removing node 0xb560203c of size 2048 
-removing node 0xb560403c of size 1024 
-removing node 0xb560603c of size 512 
-removing node 0xb560803c of size 256 
-removing node 0xb560a03c of size 128 
-removing node 0xb560c03c of size 64 
-RETURN ADDRESS IS ----------------------->>>>>0xb560e03c-> 0xb55fe000
-removing node 0xb560e03c of size 32 
+adding page node for the page located at 0xb55f2000 
+empty list starts at 0xb55f003c 
+added page node at 0xb55f003c and pagePtr points to 0x8e42580 
+removing node 0xb55f403c of size 4096 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f413c
+The current pointer is 0xb55f3000
+Current is 0xb55f413c
+The previous pointer is now 0xb55f3000
+Previous->next is 0xb55f413c
+The current pointer is now 0xb55f3000
+Current is 0xb55f413c
+removing node 0xb55f603c of size 2048 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f613c
+The current pointer is 0xb55f2800
+Current is 0xb55f613c
+The previous pointer is now 0xb55f2800
+Previous->next is 0xb55f613c
+The current pointer is now 0xb55f2800
+Current is 0xb55f613c
+removing node 0xb55f803c of size 1024 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55f813c
+The current pointer is 0xb55f2400
+Current is 0xb55f813c
+The previous pointer is now 0xb55f2400
+Previous->next is 0xb55f813c
+The current pointer is now 0xb55f2400
+Current is 0xb55f813c
+removing node 0xb55fa03c of size 512 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fa13c
+The current pointer is 0xb55f2200
+Current is 0xb55fa13c
+The previous pointer is now 0xb55f2200
+Previous->next is 0xb55fa13c
+The current pointer is now 0xb55f2200
+Current is 0xb55fa13c
+removing node 0xb55fc03c of size 256 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fc13c
+The current pointer is 0xb55f2100
+Current is 0xb55fc13c
+The previous pointer is now 0xb55f2100
+Previous->next is 0xb55fc13c
+The current pointer is now 0xb55f2100
+Current is 0xb55fc13c
+removing node 0xb55fe03c of size 128 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb55fe13c
+The current pointer is 0xb55f2080
+Current is 0xb55fe13c
+The previous pointer is now 0xb55f2080
+Previous->next is 0xb55fe13c
+The current pointer is now 0xb55f2080
+Current is 0xb55fe13c
+removing node 0xb560003c of size 64 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb560013c
+The current pointer is 0xb55f2040
+Current is 0xb560013c
+The previous pointer is now 0xb55f2040
+Previous->next is 0xb560013c
+The current pointer is now 0xb55f2040
+Current is 0xb560013c
+RETURN ADDRESS IS ----------------------->>>>>0xb560203c-> 0xb55f2000
+removing node 0xb560203c of size 32 
+The previous pointer is 0xb55f2000
+Previous->next is 0xb560213c
+The current pointer is 0xb55f2020
+Current is 0xb560213c
+The previous pointer is now 0xb55f2020
+Previous->next is 0xb560213c
+The current pointer is now 0xb55f2020
+Current is 0xb560213c
 
 
  REQUEST NUMBER 4 TO ALLOCATE BLOCK OF SIZE 130
 Adjusted size to: 256
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe100
-removing node 0xb560803c of size 256 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2100
+removing node 0xb55fc03c of size 256 
 *** freeing page for lists of size 3
 
 
  REQUEST NUMBER 5 TO ALLOCATE BLOCK OF SIZE 90
 Adjusted size to: 128
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe080
-removing node 0xb560a03c of size 128 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2080
+removing node 0xb55fe03c of size 128 
 *** freeing page for lists of size 2
 
 
- REQUEST NUMBER 6 TO ALLOCATE BLOCK OF SIZE 100
-Adjusted size to: 128
-removing node 0xb560603c of size 512 
-*** freeing page for lists of size 4
-removing node 0xb560603c of size 256 
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe200
-removing node 0xb560a03c of size 128 
+ REQUEST NUMBER 6 TO ALLOCATE BLOCK OF SIZE 7000
+Adjusted size to: 8192
 
 
  REQUEST NUMBER 7 TO ALLOCATE BLOCK OF SIZE 20
 Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe020
-removing node 0xb560e03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2020
+removing node 0xb560203c of size 32 
 *** freeing page for lists of size 0
 
 
  REQUEST NUMBER 8 TO ALLOCATE BLOCK OF SIZE 26
 Adjusted size to: 32
-removing node 0xb560c03c of size 64 
+removing node 0xb560003c of size 64 
 *** freeing page for lists of size 1
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe040
-removing node 0xb560c03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2040
+removing node 0xb560003c of size 32 
+The previous pointer is 0xb55f2040
+Previous->next is 0xb560013c
+The current pointer is 0xb55f2060
+Current is 0xb560013c
+The previous pointer is now 0xb55f2060
+Previous->next is 0xb560013c
+The current pointer is now 0xb55f2060
+Current is 0xb560013c
 
 
  REQUEST NUMBER 9 TO ALLOCATE BLOCK OF SIZE 32
 Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe060
-removing node 0xb560c03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2060
+removing node 0xb560003c of size 32 
 *** freeing page for lists of size 0
 
 
- REQUEST NUMBER 10 TO FREE BLOCK 0xb55fe000  OF SIZE 27
+ REQUEST NUMBER 10 TO FREE BLOCK 0xb55f2000  OF SIZE 27
 coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe000 and of size: 32 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 32 
 couldn't find buddy 
 not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
+Page to find: 0xb55f2000 
+firstPage: 0xb55f003c currentPage: 0xb55f2000 and looking for 0xb55f2000 
+found page, points to 0x8e42580 
 should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
+Bitmap page at 0xb55f0000 
+ Lists page at 0xb55f0000 
  Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe000 -> 	 1 -> (nil) 
-	 2 -> 0xb560a000 
- 0xb55fe280 -> 	 3 -> 0xb5606000 
- 0xb55fe300 -> 	 4 -> (nil) 
-	 5 -> 0xb5604000 
- 0xb55fe400 -> 	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
+	 0 -> 0xb5600000 
+ 0xb55f2000 -> 	 1 -> (nil) 
+	 2 -> (nil) 
+	 3 -> (nil) 
+	 4 -> 0xb55fa000 
+ 0xb55f2200 -> 	 5 -> 0xb55f8000 
+ 0xb55f2400 -> 	 6 -> 0xb55f6000 
+ 0xb55f2800 -> 	 7 -> 0xb55f4000 
+ 0xb55f3000 -> 	 8 -> 0xb55fc000 
+ 0xb55fe000 -> some stuff left.. wait 
 
 
  REQUEST NUMBER 11 TO ALLOCATE BLOCK OF SIZE 11
 Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe000
-removing node 0xb560c03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2000
+removing node 0xb560003c of size 32 
 *** freeing page for lists of size 0
 
 
  REQUEST NUMBER 12 TO ALLOCATE BLOCK OF SIZE 21
 Adjusted size to: 32
-removing node 0xb560a03c of size 128 
-*** freeing page for lists of size 2
-removing node 0xb560a03c of size 64 
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe280
-removing node 0xb560c03c of size 32 
+removing node 0xb55fa03c of size 512 
+*** freeing page for lists of size 4
+removing node 0xb55fa03c of size 256 
+The previous pointer is 0xb55f2200
+Previous->next is 0xb55fa13c
+The current pointer is 0xb55f2300
+Current is 0xb55fa13c
+The previous pointer is now 0xb55f2300
+Previous->next is 0xb55fa13c
+The current pointer is now 0xb55f2300
+Current is 0xb55fa13c
+removing node 0xb560003c of size 128 
+The previous pointer is 0xb55f2200
+Previous->next is 0xb560013c
+The current pointer is 0xb55f2280
+Current is 0xb560013c
+The previous pointer is now 0xb55f2280
+Previous->next is 0xb560013c
+The current pointer is now 0xb55f2280
+Current is 0xb560013c
+removing node 0xb560203c of size 64 
+The previous pointer is 0xb55f2200
+Previous->next is 0xb560213c
+The current pointer is 0xb55f2240
+Current is 0xb560213c
+The previous pointer is now 0xb55f2240
+Previous->next is 0xb560213c
+The current pointer is now 0xb55f2240
+Current is 0xb560213c
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2200
+removing node 0xb560403c of size 32 
+The previous pointer is 0xb55f2200
+Previous->next is 0xb560413c
+The current pointer is 0xb55f2220
+Current is 0xb560413c
+The previous pointer is now 0xb55f2220
+Previous->next is 0xb560413c
+The current pointer is now 0xb55f2220
+Current is 0xb560413c
 
 
- REQUEST NUMBER 13 TO FREE BLOCK 0xb55fe000  OF SIZE 11
+ REQUEST NUMBER 13 TO FREE BLOCK 0xb55f2000  OF SIZE 11
 coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe000 and of size: 32 
+trying to coalesce a block at ptr 0xb55f2000 and of size: 32 
 couldn't find buddy 
 not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
+Page to find: 0xb55f2000 
+firstPage: 0xb55f003c currentPage: 0xb55f2000 and looking for 0xb55f2000 
+found page, points to 0x8e42580 
 should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
+Bitmap page at 0xb55f0000 
+ Lists page at 0xb55f0000 
  Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe2a0 ->  0xb55fe000 -> 	 1 -> 0xb560a000 
- 0xb55fe2c0 -> 	 2 -> (nil) 
-	 3 -> 0xb5606000 
- 0xb55fe300 -> 	 4 -> (nil) 
-	 5 -> 0xb5604000 
- 0xb55fe400 -> 	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
+	 0 -> 0xb5604000 
+ 0xb55f2220 ->  0xb55f2000 -> 	 1 -> 0xb5602000 
+ 0xb55f2240 -> 	 2 -> 0xb5600000 
+ 0xb55f2280 -> 	 3 -> 0xb55fa000 
+ 0xb55f2300 -> 	 4 -> (nil) 
+	 5 -> 0xb55f8000 
+ 0xb55f2400 -> 	 6 -> 0xb55f6000 
+ 0xb55f2800 -> 	 7 -> 0xb55f4000 
+ 0xb55f3000 -> 	 8 -> 0xb55fc000 
+ 0xb55fe000 -> some stuff left.. wait 
 
 
- REQUEST NUMBER 14 TO FREE BLOCK 0xb55fe100  OF SIZE 130
+ REQUEST NUMBER 14 TO FREE BLOCK 0xb55f2100  OF SIZE 130
 coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe100 and of size: 256 
+trying to coalesce a block at ptr 0xb55f2100 and of size: 256 
 couldn't find buddy 
 not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
+Page to find: 0xb55f2000 
+firstPage: 0xb55f003c currentPage: 0xb55f2000 and looking for 0xb55f2000 
+found page, points to 0x8e42580 
 should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
+Bitmap page at 0xb55f0000 
+ Lists page at 0xb55f0000 
  Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe2a0 ->  0xb55fe000 -> 	 1 -> 0xb560a000 
- 0xb55fe2c0 -> 	 2 -> (nil) 
-	 3 -> 0xb5606000 
- 0xb55fe300 ->  0xb55fe100 -> 	 4 -> (nil) 
-	 5 -> 0xb5604000 
- 0xb55fe400 -> 	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
+	 0 -> 0xb5604000 
+ 0xb55f2220 ->  0xb55f2000 -> 	 1 -> 0xb5602000 
+ 0xb55f2240 -> 	 2 -> 0xb5600000 
+ 0xb55f2280 -> 	 3 -> 0xb55fa000 
+ 0xb55f2300 ->  0xb55f2100 -> 	 4 -> (nil) 
+	 5 -> 0xb55f8000 
+ 0xb55f2400 -> 	 6 -> 0xb55f6000 
+ 0xb55f2800 -> 	 7 -> 0xb55f4000 
+ 0xb55f3000 -> 	 8 -> 0xb55fc000 
+ 0xb55fe000 -> some stuff left.. wait 
 
 
- REQUEST NUMBER 15 TO FREE BLOCK 0xb55fe080  OF SIZE 90
+ REQUEST NUMBER 15 TO FREE BLOCK 0xb55f2080  OF SIZE 90
 coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe080 and of size: 128 
+trying to coalesce a block at ptr 0xb55f2080 and of size: 128 
 couldn't find buddy 
 not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
+Page to find: 0xb55f2000 
+firstPage: 0xb55f003c currentPage: 0xb55f2000 and looking for 0xb55f2000 
+found page, points to 0x8e42580 
 should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
+Bitmap page at 0xb55f0000 
+ Lists page at 0xb55f0000 
  Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe2a0 ->  0xb55fe000 -> 	 1 -> 0xb560a000 
- 0xb55fe2c0 -> 	 2 -> 0xb560e000 
- 0xb55fe080 -> 	 3 -> 0xb5606000 
- 0xb55fe300 ->  0xb55fe100 -> 	 4 -> (nil) 
-	 5 -> 0xb5604000 
- 0xb55fe400 -> 	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
+	 0 -> 0xb5604000 
+ 0xb55f2220 ->  0xb55f2000 -> 	 1 -> 0xb5602000 
+ 0xb55f2240 -> 	 2 -> 0xb5600000 
+ 0xb55f2280 ->  0xb55f2080 -> 	 3 -> 0xb55fa000 
+ 0xb55f2300 ->  0xb55f2100 -> 	 4 -> (nil) 
+	 5 -> 0xb55f8000 
+ 0xb55f2400 -> 	 6 -> 0xb55f6000 
+ 0xb55f2800 -> 	 7 -> 0xb55f4000 
+ 0xb55f3000 -> 	 8 -> 0xb55fc000 
+ 0xb55fe000 -> some stuff left.. wait 
 
 
  REQUEST NUMBER 16 TO ALLOCATE BLOCK OF SIZE 20
 Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe2a0
-removing node 0xb560c03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2220
+removing node 0xb560403c of size 32 
+The previous pointer is 0xb55f2220
+Previous->next is 0xb560413c
+The current pointer is 0xb55f2000
+Current is 0xb560413c
+The previous pointer is now 0xb55f2000
+Previous->next is 0xb560413c
+The current pointer is now 0xb55f2000
+Current is 0xb560413c
 
 
  REQUEST NUMBER 17 TO ALLOCATE BLOCK OF SIZE 30
 Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe000
-removing node 0xb560c03c of size 32 
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2000
+removing node 0xb560403c of size 32 
 *** freeing page for lists of size 0
 
 
  REQUEST NUMBER 18 TO ALLOCATE BLOCK OF SIZE 16
 Adjusted size to: 32
-removing node 0xb560a03c of size 64 
+removing node 0xb560203c of size 64 
 *** freeing page for lists of size 1
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe2c0
-removing node 0xb560a03c of size 32 
-
-
- REQUEST NUMBER 19 TO ALLOCATE BLOCK OF SIZE 24
-Adjusted size to: 32
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe2e0
-removing node 0xb560a03c of size 32 
-*** freeing page for lists of size 0
-
-
- REQUEST NUMBER 20 TO ALLOCATE BLOCK OF SIZE 66
-Adjusted size to: 128
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe080
-removing node 0xb560e03c of size 128 
-*** freeing page for lists of size 2
-
-
- REQUEST NUMBER 21 TO ALLOCATE BLOCK OF SIZE 85
-Adjusted size to: 128
-removing node 0xb560603c of size 256 
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe300
-removing node 0xb560e03c of size 128 
-
-
- REQUEST NUMBER 22 TO ALLOCATE BLOCK OF SIZE 100
-Adjusted size to: 128
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe380
-removing node 0xb560e03c of size 128 
-*** freeing page for lists of size 2
-
-
- REQUEST NUMBER 23 TO ALLOCATE BLOCK OF SIZE 90
-Adjusted size to: 128
-removing node 0xb560603c of size 256 
-*** freeing page for lists of size 3
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe100
-removing node 0xb560603c of size 128 
-
-
- REQUEST NUMBER 24 TO ALLOCATE BLOCK OF SIZE 44
-Adjusted size to: 64
-removing node 0xb560603c of size 128 
-*** freeing page for lists of size 2
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe180
-removing node 0xb560603c of size 64 
-
-
- REQUEST NUMBER 25 TO ALLOCATE BLOCK OF SIZE 66
-Adjusted size to: 128
-removing node 0xb560403c of size 1024 
-*** freeing page for lists of size 5
-removing node 0xb560403c of size 512 
-removing node 0xb560e03c of size 256 
-RETURN ADDRESS IS ----------------------->>>>> 0xb55fe400
-removing node 0xb560a03c of size 128 
-
-
- REQUEST NUMBER 26 TO FREE BLOCK 0xb55fe200  OF SIZE 100
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe200 and of size: 128 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 27 TO FREE BLOCK 0xb55fe020  OF SIZE 20
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe020 and of size: 32 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe020 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 28 TO FREE BLOCK 0xb55fe040  OF SIZE 26
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe040 and of size: 32 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe020 ->  0xb55fe040 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 29 TO FREE BLOCK 0xb55fe060  OF SIZE 32
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe060 and of size: 32 
-found buddy 
-removing node 0xb560c13c of size 32 
-trying to coalesce a block at ptr 0xb55fe040 and of size: 64 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe020 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 ->  0xb55fe040 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 30 TO FREE BLOCK 0xb55fe280  OF SIZE 21
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe280 and of size: 32 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe020 ->  0xb55fe280 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 ->  0xb55fe040 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 31 TO FREE BLOCK 0xb55fe000  OF SIZE 30
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe000 and of size: 32 
-found buddy 
-removing node 0xb560c03c of size 32 
-trying to coalesce a block at ptr 0xb55fe000 and of size: 64 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 64*2 at 0xb55fe000 
-removing node 0xb560623c of size 64 
-removing node 0xb560613c of size 64 
-trying to coalesce a block at ptr 0xb55fe000 and of size: 128 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe280 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 ->  0xb55fe000 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 32 TO FREE BLOCK 0xb55fe2e0  OF SIZE 24
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe2e0 and of size: 32 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe280 ->  0xb55fe2e0 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 ->  0xb55fe000 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 33 TO FREE BLOCK 0xb55fe2a0  OF SIZE 20
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe2a0 and of size: 32 
-found buddy 
-removing node 0xb560c03c of size 32 
-trying to coalesce a block at ptr 0xb55fe280 and of size: 64 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> 0xb560c000 
- 0xb55fe2e0 -> 	 1 -> 0xb5606000 
- 0xb55fe1c0 ->  0xb55fe280 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe200 ->  0xb55fe000 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 34 TO FREE BLOCK 0xb55fe2c0  OF SIZE 16
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe2c0 and of size: 32 
-found buddy 
-removing node 0xb560c03c of size 32 
-*** freeing page for lists of size 0
-trying to coalesce a block at ptr 0xb55fe2c0 and of size: 64 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 64*2 at 0xb55fe280 
-removing node 0xb560623c of size 64 
-removing node 0xb560613c of size 64 
-trying to coalesce a block at ptr 0xb55fe280 and of size: 128 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 128*2 at 0xb55fe200 
-removing node 0xb560a33c of size 128 
-removing node 0xb560a13c of size 128 
-trying to coalesce a block at ptr 0xb55fe200 and of size: 256 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe000 -> 	 3 -> 0xb560e000 
- 0xb55fe500 ->  0xb55fe200 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 35 TO FREE BLOCK 0xb55fe080  OF SIZE 66
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe080 and of size: 128 
-found buddy 
-removing node 0xb560a13c of size 128 
-trying to coalesce a block at ptr 0xb55fe000 and of size: 256 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 -> 	 3 -> 0xb560e000 
- 0xb55fe500 ->  0xb55fe200 ->  0xb55fe000 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 36 TO FREE BLOCK 0xb55fe300  OF SIZE 85
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe300 and of size: 128 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe300 -> 	 3 -> 0xb560e000 
- 0xb55fe500 ->  0xb55fe200 ->  0xb55fe000 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 37 TO FREE BLOCK 0xb55fe380  OF SIZE 100
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe380 and of size: 128 
-found buddy 
-removing node 0xb560a13c of size 128 
-trying to coalesce a block at ptr 0xb55fe300 and of size: 256 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 256*2 at 0xb55fe200 
-removing node 0xb560e33c of size 256 
-removing node 0xb560e13c of size 256 
-trying to coalesce a block at ptr 0xb55fe200 and of size: 512 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 -> 	 3 -> 0xb560e000 
- 0xb55fe500 ->  0xb55fe000 -> 	 4 -> 0xb5604000 
- 0xb55fe600 ->  0xb55fe200 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 38 TO FREE BLOCK 0xb55fe100  OF SIZE 90
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe100 and of size: 128 
-couldn't find buddy 
-not from recursion, so find pointer and add to list 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> 0xb5606000 
- 0xb55fe1c0 -> 	 2 -> 0xb560a000 
- 0xb55fe480 ->  0xb55fe100 -> 	 3 -> 0xb560e000 
- 0xb55fe500 ->  0xb55fe000 -> 	 4 -> 0xb5604000 
- 0xb55fe600 ->  0xb55fe200 -> 	 5 -> (nil) 
-	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 39 TO FREE BLOCK 0xb55fe180  OF SIZE 44
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe180 and of size: 64 
-found buddy 
-removing node 0xb560603c of size 64 
-*** freeing page for lists of size 1
-trying to coalesce a block at ptr 0xb55fe180 and of size: 128 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 128*2 at 0xb55fe100 
-removing node 0xb560a23c of size 128 
-removing node 0xb560a13c of size 128 
-trying to coalesce a block at ptr 0xb55fe100 and of size: 256 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 256*2 at 0xb55fe000 
-removing node 0xb560e23c of size 256 
-removing node 0xb560e13c of size 256 
-trying to coalesce a block at ptr 0xb55fe000 and of size: 512 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 512*2 at 0xb55fe000 
-removing node 0xb560423c of size 512 
-removing node 0xb560413c of size 512 
-trying to coalesce a block at ptr 0xb55fe000 and of size: 1024 
-couldn't find buddy 
-from recursion, so do nothing 
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> (nil) 
-	 2 -> 0xb560a000 
- 0xb55fe480 -> 	 3 -> 0xb560e000 
- 0xb55fe500 -> 	 4 -> 0xb5604000 
- 0xb55fe600 -> 	 5 -> 0xb5606000 
- 0xb55fe000 -> 	 6 -> 0xb5602000 
- 0xb55fe800 -> 	 7 -> 0xb5600000 
- 0xb55ff000 -> 	 8 -> (nil) 
-some stuff left.. wait 
-
-
- REQUEST NUMBER 40 TO FREE BLOCK 0xb55fe400  OF SIZE 66
-coalescing blocks if possible
-trying to coalesce a block at ptr 0xb55fe400 and of size: 128 
-found buddy 
-removing node 0xb560a03c of size 128 
-*** freeing page for lists of size 2
-trying to coalesce a block at ptr 0xb55fe400 and of size: 256 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 256*2 at 0xb55fe400 
-removing node 0xb560e13c of size 256 
-removing node 0xb560e03c of size 256 
-*** freeing page for lists of size 3
-trying to coalesce a block at ptr 0xb55fe400 and of size: 512 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 512*2 at 0xb55fe400 
-removing node 0xb560413c of size 512 
-removing node 0xb560403c of size 512 
-*** freeing page for lists of size 4
-trying to coalesce a block at ptr 0xb55fe400 and of size: 1024 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 1024*2 at 0xb55fe000 
-removing node 0xb560613c of size 1024 
-removing node 0xb560603c of size 1024 
-*** freeing page for lists of size 5
-trying to coalesce a block at ptr 0xb55fe000 and of size: 2048 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-Adding to list node of size 2048*2 at 0xb55fe000 
-removing node 0xb560213c of size 2048 
-removing node 0xb560203c of size 2048 
-*** freeing page for lists of size 6
-trying to coalesce a block at ptr 0xb55fe000 and of size: 4096 
-found buddy 
-looking for block 
-looking for buddy 
-evaluating on size to free page or add to list 
-freeing page of buddy 0xb560003c  at ptr 0xa038580 
-Page to find: 0xb55fe000 
-firstPage: 0xb55fc03c currentPage: 0xb55fe000 and looking for 0xb55fe000 
-found page, points to 0xa038580 
-Freeing page with pagePtr: 0xa038580 
-removing pageNode 
-removing node 0xb560013c of size 4096 
-removing node 0xb560003c of size 4096 
-*** freeing page for lists of size 7
-should be scanning bitmap by page and deleting pages as needed
-Bitmap page at 0xb55fc000 
- Lists page at 0xb55fc000 
- Printing lists: 
-	 0 -> (nil) 
-	 1 -> (nil) 
-	 2 -> (nil) 
-	 3 -> (nil) 
-	 4 -> (nil) 
-	 5 -> (nil) 
-	 6 -> (nil) 
-	 7 -> (nil) 
-	 8 -> (nil) 
-freeing everything 
-Page Requested/Freed/In Use:    36/   36/    0
-Test: PASS
+RETURN ADDRESS IS ----------------------->>>>> 0xb55f2240
+removing node 0xb560203c of size 32 
+The previous pointer is 0xb55f2240
+Previous->next is 0xb560213c
+The current pointer is 0xb55f2260
+Current is 0xb560213c
+The previous pointer is now 0xb55f2260
+Previous->next is 0xb560213c
+The current pointer is now 0xb55f2260
+Current i
