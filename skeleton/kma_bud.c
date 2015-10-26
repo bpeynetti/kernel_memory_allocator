@@ -251,7 +251,7 @@ void free_pages()
 
     pageheader* page = (pageheader*)(globalPtr->ptr);
     printf("Bitmap page at %p \n ",page);
-    page = page->next;
+    //page = page->next;
     printf("Lists page at %p \n ",page);
     printf("Printing lists: \n");
     int flag = 1;
@@ -274,7 +274,7 @@ void free_pages()
 	if (flag==1)
 	{
 		printf("freeing everything \n");
-		free_page(page->ptr);
+		//free_page(page->ptr);
 		free_page(globalPtr);
 		globalPtr = NULL;
 	}
@@ -401,38 +401,40 @@ globalPtr = newFirstPage;
     for (i=0;i<=8;i++)
     {
         firstPageHead->ptrs[i] = NULL;
+	printf("Pointer %d location is %p \n", i, firstPageHead->ptrs[i]);
     }
     // firstPageHead->ptrs = NULL;
     
 
-    kma_page_t* newListPage = get_page();
-    *((kma_page_t**)newListPage->ptr) = newListPage;
+    //kma_page_t* newListPage = get_page();
+    //*((kma_page_t**)newListPage->ptr) = newListPage;
     
-    pageheader* newListPageHead = newListPage->ptr;
-    pageheader* secondPagePtr = newListPage->ptr;
-    newListPageHead->next = NULL;
-    newListPageHead->counter=0;
-    newListPageHead->pType = LISTS;
-    newListPageHead->firstBlock = NULL;
-    i=0;
-    for (i=0;i<=8;i++)
-    {
-        newListPageHead->ptrs[i] = NULL;
-	printf("Pointer %d location is %p \n",i,newListPageHead->ptrs[i]);
-    }
+    //pageheader* newListPageHead = newListPage->ptr;
+    //pageheader* secondPagePtr = newListPage->ptr;
+    //newListPageHead->next = NULL;
+    //newListPageHead->counter=0;
+    //newListPageHead->pType = LISTS;
+    //newListPageHead->firstBlock = NULL;
+    //i=0;
+    //for (i=0;i<=8;i++)
+    //{
+    //    newListPageHead->ptrs[i] = NULL;
+	//printf("Pointer %d location is %p \n",i,newListPageHead->ptrs[i]);
+    //}
     
     //make them connected
     //firstPageHead->next = newListPageHead;
-	printf("ptr first: %p \n",firstPageHead->next);
-	firstPageHead->next = newListPage->ptr;    
-	printf("ptr after: %p \n",firstPageHead->next);
+	//printf("ptr first: %p \n",firstPageHead->next);
+	//firstPageHead->next = newListPage->ptr;    
+	//printf("ptr after: %p \n",firstPageHead->next);
 //	globalPtr->ptr = firstPageHead;
 	printf("global Ptr points to : %p\n",globalPtr->ptr); 
     printf("bitmap page: %p points to %p \n",firstPageHead,firstPageHead->next);
-    printf("list page: %p points to %p\n",newListPageHead,newListPageHead->next);
-	firstPageHead->next = newListPage->ptr;
+    //printf("list page: %p points to %p\n",newListPageHead,newListPageHead->next);
+	//firstPageHead->next = newListPage->ptr;
 	printf("bitmap page: %p points to : %p \n",firstPageHead,firstPageHead->next);  
 	printf("global ptr points to %p \n",globalPtr->ptr);
+	printf("END OF INITIALIZING BOOK KEEPING -----------------\n\n");
   return;
 }
 
@@ -442,7 +444,7 @@ blocknode* getFreeBlock(kma_size_t size)
     pageheader* page = (pageheader*)(globalPtr->ptr);    
 	//printf("page at is %p and points to %p\n",globalPtr->ptr,page->next);
     //move on to the list page
-    page = page->next;
+    //page = page->next;
    //printf("list page is %p \n",page);
     //listhead pointers = page->ptrs;
     
@@ -545,7 +547,7 @@ void remove_from_list(blocknode* node)
     pageheader* page = (pageheader*)(globalPtr->ptr);    
 
     //move to list page
-    page = page->next;
+    //page = page->next;
     pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
     blocknode* firstNode = (blocknode*)(blockPage->firstBlock);
     blocknode* current = firstNode;
@@ -650,8 +652,8 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     int listIndex = getListIndex(size);
     pageheader* page = (pageheader*)(globalPtr->ptr);    
 
-    //move to list page
-    page = page->next;
+    //there is no longer a list page
+    //page = page->next;
     pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
    // printf("Adding to list size %d at %p and page for this is %p \n",size,ptr,firstNode);
 
@@ -817,8 +819,8 @@ blocknode* findBlock(void* ptr, kma_size_t size)
 	int listIndex = getListIndex(size);
 	pageheader* page = (pageheader*)(globalPtr->ptr);    
 
-	//move to list page
-	page = page->next;
+	//there is no longer a list page
+	//page = page->next;
     pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
     blocknode* firstNode = (blocknode*)(blockPage->firstBlock);
    // blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
@@ -838,8 +840,8 @@ int findBuddy(void* buddyAddr,kma_size_t size)
 	int listIndex = getListIndex(size);
 	pageheader* page = (pageheader*)(globalPtr->ptr);    
 
-	//move to list page
-	page = page->next;
+	//no longer have a list page
+	//page = page->next;
     pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
     if (blockPage==NULL){
    	 //there are no free blocks here
@@ -872,8 +874,8 @@ void* findPagePtr(void* ptr)
 	printf("Page to find: %p \n",pageToFind);
 	pageheader* page = (pageheader*)(globalPtr->ptr);
     
-	//list page
-	page = page->next;
+	//no longer have a list page
+	//page = page->next;
     
 	pagenode* currentPage = (pagenode*)(page->pageListHead);
 	printf("firstPage: %p ",currentPage);
@@ -893,9 +895,9 @@ void* findPagePtr(void* ptr)
 void addPageNode(void* ptr,void* pagePtr)
 {
 	pageheader* page = (pageheader*)(globalPtr->ptr);
-    printf("adding page node of page %p ",ptr);    
-	//list page
-	page = page->next;
+        printf("adding page node for the page located at %p \n",ptr);    
+	//page with list of pages is first page so don't need to go to the next
+	//page = page->next;
     
 	pagenode* currentPageNode = (pagenode*)(page->pageListHead);
 	pagenode* previousPageNode  = NULL;
@@ -904,7 +906,7 @@ void addPageNode(void* ptr,void* pagePtr)
 	if (currentPageNode==NULL)
 	{
     	currentPageNode = (pagenode*)((int)(page) + sizeof(pageheader));
-		 printf("empty list starts at %p \n",currentPageNode);
+	printf("empty list starts at %p \n",currentPageNode);
    	currentPageNode->ptr = ptr;
     	currentPageNode->pagePtr = pagePtr;
     	for (i=0;i<32;i++)
@@ -938,8 +940,8 @@ void remove_from_pagelist(void* pagePtr)
 {
 	pageheader* page = (pageheader*)(globalPtr->ptr);
     
-	//list page
-	page = page->next;
+	//there is no longer a list page
+	//page = page->next;
     
 	pagenode* currentPageNode = (pagenode*)(page->pageListHead);
 	pagenode* previousPageNode  = NULL;
