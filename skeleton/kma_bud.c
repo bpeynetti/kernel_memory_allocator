@@ -226,8 +226,9 @@ void kma_free(void* ptr, kma_size_t size)
         //}
     
         //remove it as if it was a free node
-        void* pagePtr = (void*)(findPagePtr(ptr));;
-        remove_from_pagelist(pagePtr);
+        void* pagePtr = (void*)(findPagePtr(ptr));
+	remove_from_pagelist(pagePtr);
+	printf("230 \n");
         free_page(pagePtr);
         //update_bitmap(ptr,size);
         free_pages();
@@ -780,7 +781,7 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
             	kma_page_t* pagePtr = buddy->pagePtr;
             	free_page(pagePtr);
             	remove_from_pagelist(pagePtr);
-            	//  remove_from_list(node);
+            	printf("784 \n");//  remove_from_list(node);
            	//remove the buddy
             	remove_from_list(buddy);
             	return;
@@ -816,7 +817,8 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
    		 printf("Freeing page with pagePtr: %p \n",pagePtr);
    		 free_page(pagePtr);
    	   	remove_from_pagelist(buddy->pagePtr);
-   	   	remove_from_list(node);
+   	   	printf("820 \n");
+		remove_from_list(node);
    	   	remove_from_list(buddy);
    	   	return;
         	}
@@ -954,6 +956,7 @@ void addPageNode(void* ptr,void* pagePtr)
         
         newPageNode->ptr = ptr;
     	newPageNode->pagePtr = pagePtr;
+	newPageNode->next = NULL;
     	for (i=0;i<32;i++)
     	{
         	newPageNode->bitmap[i] = 0;
@@ -997,7 +1000,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	while (currentPageNode!=NULL)
     	{
 		count++;
-		printf("%d pages\n", count);
+	//	printf("%d pages\n", count);
         	previousPageNode = currentPageNode;
         	currentPageNode = currentPageNode->next;
     	}
@@ -1043,6 +1046,9 @@ void remove_from_pagelist(void* pagePtr)
 
 	while (currentPageNode->pagePtr!=pagePtr)
 	{
+
+		printf("IN THE LOOp %p \n",currentPageNode);
+
     	previousPageNode = currentPageNode;
     	currentPageNode = currentPageNode->next;
 	}
@@ -1066,6 +1072,7 @@ void remove_from_pagelist(void* pagePtr)
     	//block to remove is at previous, and step through
     	while(currentPageNode!=NULL)
     	{
+		printf("IN LOOPP\n");
         	//copy the block node in front to the back
         	previousPageNode->ptr = currentPageNode->ptr;
         	//previousPageNode->next = currentPageNode->next;
