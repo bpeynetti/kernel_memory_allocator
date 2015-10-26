@@ -143,9 +143,12 @@ void* kma_malloc(kma_size_t size)
 
     if (returnAddress!=NULL)
     {
-        //found a free block, update the bitmap
+	printf("RETURN ADDRESS IS ----------------------->>>>> %p\n",returnAddress->ptr);
+	void* rAddress = (void*)(returnAddress->ptr);
+    	remove_from_list(returnAddress);
+	    //found a free block, update the bitmap
         update_bitmap(returnAddress,size);
-        return returnAddress->ptr;
+        return rAddress;
     }
     
     //did not find a free block
@@ -165,12 +168,15 @@ void* kma_malloc(kma_size_t size)
     
     //try again, this time it should be good
     returnAddress = getFreeBlock(size);
+	printf("RETURN ADDRESS IS ----------------------->>>>>%p-> %p\n",returnAddress,returnAddress->ptr);
     
     if (returnAddress!=NULL)
     {
         //update bitmap, return
-        update_bitmap(returnAddress,size);
-        return returnAddress->ptr;
+	void* rAddress = (void*)(returnAddress->ptr);
+	remove_from_list(returnAddress);
+        update_bitmap(returnAddress,size);  
+      return rAddress;
     }
     
     //else, not capable of giving that request, return null
@@ -183,7 +189,7 @@ void kma_free(void* ptr, kma_size_t size)
 {
 
     requestNumber++;
-    printf("REQUEST NUMBER %d TO FREE BLOCK OF SIZE %d\n",requestNumber,size);
+    printf("REQUEST NUMBER %d TO FREE BLOCK %p  OF SIZE %d\n",requestNumber,ptr,size);
 
   size = adjustSize(size);
     
@@ -208,7 +214,7 @@ void kma_free(void* ptr, kma_size_t size)
 
   update_bitmap(ptr,size);
   
-
+	printf("coalescing blocks if possible\n");
   coalesce_blocks(ptr,size);
     
   free_pages();
@@ -304,24 +310,26 @@ blocknode* getFreeBlock(kma_size_t size)
 {
     //walk through the blocks until you find one that fits
     pageheader* page = (pageheader*)(globalPtr->ptr);    
-	printf("page at is %p and points to %p\n",globalPtr->ptr,page->next);
+	//printf("page at is %p and points to %p\n",globalPtr->ptr,page->next);
     //move on to the list page
     page = page->next;
-   printf("list page is %p \n",page);
+   //printf("list page is %p \n",page);
     //listhead pointers = page->ptrs;
     
     //step through size 
     int index = getListIndex(size);
     int origIndex = index;
+	printf("trying to get free block of size %d \n",size);
     while (index<=7)
     {
 	void* pointer = page->ptrs[index];
         if (pointer!=NULL)
         {
-        	printf("Found free block!\n");
+        	printf("Found free block! in page %p \n",pointer);
 	    break;
         }
-        index++;
+        printf("couldn't find at level %d, looking above\n",index);
+	index++;
     }
 
     if (index==8)
@@ -339,7 +347,8 @@ blocknode* getFreeBlock(kma_size_t size)
     else
     {
         //split into blocks and then return
-        return split_free_to_size(size,(blocknode*)(page->ptrs[index]));
+	pageheader* blockPage = (pageheader*)(page->ptrs[index]);
+        return split_free_to_size(size,(blocknode*)(blockPage->firstBlock));
     }
     return NULL;
     
@@ -383,6 +392,7 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node)
         return node;
     }
     else {
+	printf("splitting node from size %d to size %d\n",node->size,size);
         //node is too big
         //make children and recurse on left child
         void* leftChild = (void*)(node->ptr);
@@ -399,6 +409,7 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node)
 
 void remove_from_list(blocknode* node)
 {
+	printf("removing node %p of size %d \n",node,node->size);
     //removes a block from a list of just the block that we have, does not coalesce. just remove
     int listIndex = getListIndex(node->size);
     pageheader* page = (pageheader*)(globalPtr->ptr);    
@@ -422,23 +433,26 @@ void remove_from_list(blocknode* node)
         previous = current;
         current = current->next;
     }
-
     //now current has the pointer to the node that we will remove
-    if (previous==NULL)
+    if (previous==NULL && current->next==NULL)
     {
         //only one node
         page->ptrs[listIndex] = NULL;
         //free the page where that node existed
-        pageheader* pageTop = (void*)(((int)node>>13)<<13);
-        free_page(pageTop->ptr);
+        
+	pageheader* pageTop = (void*)(((int)node>>13)<<13);
+	printf("*** freeing page for lists of size %d\n",listIndex);        
+	free_page(pageTop->ptr);
         return;
     }
-    else 
+
+    if (current->next!=NULL) 
     {
         //move everything back by 1 node (within the same size)
         //move current ahead by one
+	previous = current;
         current = current->next;
-        previous = previous->next;
+       // previous = previous->next;
 
         //block to remove is at previous, and step through
         while(current!=NULL)
@@ -457,7 +471,11 @@ void remove_from_list(blocknode* node)
 
         //fix pointers
         //fix_pointers();
+	return;
     }
+   //last case, it's the last one but not the first one
+    previous->next = NULL;
+	return;
 }
 
 void fix_pointers()
@@ -497,6 +515,7 @@ void fix_pointers()
 
 blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 {
+	printf("adding size %d to end of list\n",size);
     //add to end of the list of its size 
     int listIndex = getListIndex(size);
     pageheader* page = (pageheader*)(globalPtr->ptr);    
@@ -504,14 +523,15 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     //move to list page
     page = page->next;
     pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
-    printf("Adding to list size %d at %p and page for this is %p \n",size,ptr,firstNode);
+   // printf("Adding to list size %d at %p and page for this is %p \n",size,ptr,firstNode);
 
     //if firstNode is null, get a new page for the list of these nodes
     if (blockPage==NULL)
     {
+	printf("getting new page \n");
         kma_page_t* newListPage = get_page();
         *((kma_page_t**)newListPage->ptr) = newListPage;
-        
+        printf("new page points to %p \n",newListPage->ptr); 
         pageheader* newListPageHead = (pageheader*)newListPage->ptr;
 	
         newListPageHead->next = NULL;
@@ -521,7 +541,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 
         //link the array to this page
         page->ptrs[listIndex] = (void*)newListPageHead;
-
+	printf("pointer of list %d points to new pageList %p \n",listIndex,page->ptrs[listIndex]);
         //and put the first node in the list
         blocknode* firstBlock = newListPageHead->firstBlock;
         firstBlock->ptr = ptr;
@@ -533,7 +553,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         return firstBlock;
     }
 
-    blocknode* current = blockPage->firstNode;
+    blocknode* current = blockPage->firstBlock;
 
     //otherwise, go through list and add it at the end
     blocknode* previous = NULL;
@@ -550,17 +570,19 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     newNode->size = size;
     newNode->next = NULL;
     newNode->pagePtr = pagePtr;
-
+	printf("created new node %p which %p points to -> %p (%p) \n",newNode,previous,previous->next,newNode->ptr);
     return newNode;
 }
 
-void coalesce_blocks(void* ptr,kma_size_t size)
+void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
 {
+//from recurstion -> if 1, will find and remove the block if it was found. otherwise, it won't look for it
 
-    //trying to free a block at ptr and of size: size
+    printf("trying to coalesce a block at ptr %p and of size: %d \n",ptr,size);
 
     //find buddy
     void* buddyAddr = (void*)((int)ptr ^ (int)size);
+	printf("buddy address is %p \n",buddyAddr);
     int fBuddy;
     fBuddy =  findBuddy(buddyAddr,size);
     //if buddy found, coalesce
@@ -577,37 +599,42 @@ void coalesce_blocks(void* ptr,kma_size_t size)
     
     if (fBuddy==1)
     {
+	printf("found buddy \n");
         //coalesce these 2 and remove from list
         //find one
-        blocknode* node = findBlock(ptr,size);
+       //no need to find this one because it's not there! looking for its buddy so must be free
+	 //blocknode* node = findBlock(ptr,size);
         //find the other
-        blocknode* buddy = findBlock(ptr,size);
-
+        blocknode* buddy = findBlock(buddyAddr,size);
+	printf("buddy address is %p \n",buddy);
         //if size is PAGE_SIZE
-        if (node->size*2 == PAGE_SIZE)
+        if (buddy->size*2 == PAGE_SIZE)
         {
             //delete and free the page
-            kma_page_t* pagePtr = node->pagePtr;
+            kma_page_t* pagePtr = buddy->pagePtr;
             free_page(pagePtr);
-            remove_from_list(node);
+          //  remove_from_list(node);
+	//remove the buddy
             remove_from_list(buddy);
             return;
         }
         else
         {
             //add a new one to list
-            void* lowerAddress = node->ptr;
-            if (node->ptr > buddy->ptr)
+            void* lowerAddress = ptr;
+            if (ptr > buddy->ptr)
             {
                 lowerAddress = buddy->ptr;
             }
             //add to list
-            blocknode* parentNode = add_to_list(lowerAddress, node->size*2, node->pagePtr);
+		printf("adding to list node of size %d*2 at %p \n",buddy->size,lowerAddress);
+            blocknode* parentNode = add_to_list(lowerAddress, buddy->size*2, buddy->pagePtr);
             //and remove previous ones from list
-            remove_from_list(node);
+		//remove only the buddy
+            //remove_from_list(node);
             remove_from_list(buddy);
 
-            coalesce_blocks(parentNode,parentNode->size);
+            coalesce_blocks(parentNode->ptr,parentNode->size,1);
         }
     }
 }
@@ -619,7 +646,9 @@ blocknode* findBlock(void* ptr, kma_size_t size)
 
     //move to list page
     page = page->next;
-    blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
+	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+	blocknode* firstNode = (blocknode*)(blockPage->firstBlock);
+   // blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
     blocknode* current = firstNode;
 
     while (current->ptr != ptr)
@@ -632,23 +661,28 @@ blocknode* findBlock(void* ptr, kma_size_t size)
 
 int findBuddy(void* buddyAddr,kma_size_t size)
 {
+   printf("looking for buddy \n");
     int listIndex = getListIndex(size);
     pageheader* page = (pageheader*)(globalPtr->ptr);    
 
     //move to list page
     page = page->next;
-    blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
+	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+	blocknode* firstNode = (blocknode*)(blockPage->firstBlock);   
+// blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
     blocknode* current = firstNode;
-
+	printf("nodes begin at %p \n",current);
     while (current!=NULL)
     {
         if (current->ptr == buddyAddr)
         {
+		printf("found it! %p->%p \n",current,current->ptr);
             return 1;
         }
         current = current->next;
     }
     //couldn't find it, return 0
+	printf("couldn't find it. return 0 \n");
     return 0;
 }
 
