@@ -162,7 +162,7 @@ void* kma_malloc(kma_size_t size)
 	void* rAddress = (void*)(returnAddress->ptr);
     	remove_from_list(returnAddress);
 	    //found a free block, update the bitmap
-        update_bitmap(returnAddress,size);
+        //update_bitmap(returnAddress,size);
         return rAddress;
     }
     
@@ -190,7 +190,7 @@ void* kma_malloc(kma_size_t size)
         //update bitmap, return
 	void* rAddress = (void*)(returnAddress->ptr);
 	remove_from_list(returnAddress);
-        update_bitmap(returnAddress,size);  
+        //update_bitmap(returnAddress,size);  
       return rAddress;
     }
     
@@ -227,12 +227,12 @@ void kma_free(void* ptr, kma_size_t size)
         void* pagePtr = (void*)(firstNode->pagePtr);
         remove_from_list(firstNode);
         free_page(pagePtr);
-        update_bitmap(ptr,size);
+        //update_bitmap(ptr,size);
         free_pages();
         return;
   }
 
-  update_bitmap(ptr,size);
+  //update_bitmap(ptr,size);
   
 	printf("coalescing blocks if possible\n");
   coalesce_blocks(ptr,size,0);
