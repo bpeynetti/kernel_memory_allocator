@@ -86,7 +86,7 @@ typedef struct page_head
     void* next;
     page_type pType;
     void* firstBlock;
-    void* ptrs[8];
+    void* ptrs[9];
     int counter;
 } pageheader;
 
@@ -249,11 +249,12 @@ void initialize_books()
     //get a page for bitmap 
     
     kma_page_t* newFirstPage = get_page();
+globalPtr = newFirstPage;
     pageheader* firstPageHead;
 
     //put it in the first place 
     *((kma_page_t**)newFirstPage->ptr) = newFirstPage;
-    globalPtr = (kma_page_t*)(newFirstPage->ptr);
+   // globalPtr = (kma_page_t*)(newFirstPage->ptr);
 
     firstPageHead = newFirstPage->ptr;
     firstPageHead->next = NULL;
@@ -272,7 +273,7 @@ void initialize_books()
     *((kma_page_t**)newListPage->ptr) = newListPage;
     
     pageheader* newListPageHead = newListPage->ptr;
-
+    pageheader* secondPagePtr = newListPage->ptr;
     newListPageHead->next = NULL;
     newListPageHead->counter=0;
     newListPageHead->pType = LISTS;
@@ -281,24 +282,32 @@ void initialize_books()
     for (i=0;i<=8;i++)
     {
         newListPageHead->ptrs[i] = NULL;
+	printf("Pointer %d location is %p \n",i,newListPageHead->ptrs[i]);
     }
     
     //make them connected
-    firstPageHead->next = newListPageHead;
-    
-    printf("bitmap page: %p\n",firstPageHead);
-    printf("list page: %p\n",newListPageHead);
-    return;
+    //firstPageHead->next = newListPageHead;
+	printf("ptr first: %p \n",firstPageHead->next);
+	firstPageHead->next = newListPage->ptr;    
+	printf("ptr after: %p \n",firstPageHead->next);
+//	globalPtr->ptr = firstPageHead;
+	printf("global Ptr points to : %p\n",globalPtr->ptr); 
+    printf("bitmap page: %p points to %p \n",firstPageHead,firstPageHead->next);
+    printf("list page: %p points to %p\n",newListPageHead,newListPageHead->next);
+	firstPageHead->next = newListPage->ptr;
+	printf("bitmap page: %p points to : %p \n",firstPageHead,firstPageHead->next);  
+	printf("global ptr points to %p \n",globalPtr->ptr);
+  return;
 }
 
 blocknode* getFreeBlock(kma_size_t size)
 {
     //walk through the blocks until you find one that fits
     pageheader* page = (pageheader*)(globalPtr->ptr);    
-
+	printf("page at is %p and points to %p\n",globalPtr->ptr,page->next);
     //move on to the list page
     page = page->next;
-    
+   printf("list page is %p \n",page);
     //listhead pointers = page->ptrs;
     
     //step through size 
@@ -306,9 +315,11 @@ blocknode* getFreeBlock(kma_size_t size)
     int origIndex = index;
     while (index<=7)
     {
-        if (page->ptrs[index]!=NULL)
+	void* pointer = page->ptrs[index];
+        if (pointer!=NULL)
         {
-            break;
+        	printf("Found free block!\n");
+	    break;
         }
         index++;
     }
@@ -494,7 +505,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     page = page->next;
     blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
     blocknode* current = firstNode;
-
+    printf("Adding to list size %d at %p and page for this is %p \n",size,ptr,firstNode);
 
     //if firstNode is null, get a new page for the list of these nodes
     if (firstNode==NULL)
@@ -503,7 +514,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         *((kma_page_t**)newListPage->ptr) = newListPage;
         
         pageheader* newListPageHead = (pageheader*)newListPage->ptr;
-
+	
         newListPageHead->next = NULL;
         newListPageHead->counter=0;
         newListPageHead->pType = LISTS;
