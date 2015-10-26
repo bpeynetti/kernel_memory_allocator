@@ -80,6 +80,7 @@ typedef struct page_node
     void* ptr;
     kma_page_t* pagePtr;
     void* next;
+    char bitmap[32];
     //bitmap struct???
 } pagenode;
 
@@ -125,7 +126,9 @@ blocknode* findBlock(void* ptr, kma_size_t size);
 int findBuddy(void* buddyAddr,kma_size_t size);
 void free_pages();
 void* findPagePtr(void* ptr);
-
+void remove_from_pagelist(void* pagePtr);
+void addPageNode(void* ptr,void* pagePtr);
+void* findPagePtr(void* ptr);
 
 /************External Declaration*****************************************/
 
@@ -246,13 +249,14 @@ void free_pages()
     page = page->next;
     printf("Lists page at %p \n ",page);
     printf("Printing lists: \n");
-
+    int flag = 1;
     int j=0;
     for (j=0;j<9;j++)
     {
         printf("\t %d -> %p \n",j,page->ptrs[j]);
         if (page->ptrs[j]!=NULL)
         {
+		flag = 0;
             pageheader* blockPage = (pageheader*)(page->ptrs[j]);
             blocknode* current = blockPage->firstBlock;
             while (current!=NULL)
@@ -262,6 +266,16 @@ void free_pages()
             }
         }
     }
+	if (flag==1)
+	{
+		printf("freeing everything \n");
+		free_page(page->ptr);
+		free_page(globalPtr);
+		globalPtr = NULL;
+	}
+	else {
+		printf("some stuff left.. wait \n");
+	}
 
 
 }
@@ -804,7 +818,7 @@ void addPageNode(void* ptr,void* pagePtr)
 
     if (currentPageNode==NULL)
     {
-        currentPageNode = (pagenode*)((int)(page) + sizeof(pageListHead));
+        currentPageNode = (pagenode*)((int)(page) + sizeof(pageheader));
         currentPageNode->ptr = ptr;
         currentPageNode->pagePtr = pagePtr;
         for (i=0;i<32;i++)
