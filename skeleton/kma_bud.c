@@ -503,12 +503,11 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 
     //move to list page
     page = page->next;
-    blocknode* firstNode = (blocknode*)(page->ptrs[listIndex]);
-    blocknode* current = firstNode;
+    pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
     printf("Adding to list size %d at %p and page for this is %p \n",size,ptr,firstNode);
 
     //if firstNode is null, get a new page for the list of these nodes
-    if (firstNode==NULL)
+    if (blockPage==NULL)
     {
         kma_page_t* newListPage = get_page();
         *((kma_page_t**)newListPage->ptr) = newListPage;
@@ -520,6 +519,9 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         newListPageHead->pType = LISTS;
         newListPageHead->firstBlock = (void*)((int)newListPageHead + sizeof(pageheader));; 
 
+        //link the array to this page
+        page->ptrs[listIndex] = (void*)newListPageHead;
+
         //and put the first node in the list
         blocknode* firstBlock = newListPageHead->firstBlock;
         firstBlock->ptr = ptr;
@@ -530,6 +532,8 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 
         return firstBlock;
     }
+
+    blocknode* current = blockPage->firstNode;
 
     //otherwise, go through list and add it at the end
     blocknode* previous = NULL;
