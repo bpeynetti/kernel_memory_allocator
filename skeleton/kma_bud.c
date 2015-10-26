@@ -352,7 +352,8 @@ void update_bitmap(void* ptr,kma_size_t size)
     if (sizeInChars == 0)
     {
         //go through the bits in the char that need to be changed
-        for (int i = charOffset; i < charOffset + bitsInChar; i++)
+        int i;
+        for (i = charOffset; i < charOffset + bitsInChar; i++)
         {
             currentPageNode->bitmap[startingChar] ^= 1 << (8 - i - 1);
         }
@@ -361,9 +362,11 @@ void update_bitmap(void* ptr,kma_size_t size)
     else
     {
         //go through all the chars that you need to update, and update all of their bits
-        for (int j = startingChar; j < startingChar + sizeInChars; j++)
+        int j;
+        for (j = startingChar; j < startingChar + sizeInChars; j++)
         {
-            for (int k = 0; k < 8; k++)
+            int k;
+            for (k = 0; k < 8; k++)
             {
                 currentPageNode->bitmap[j] ^= 1 << (k);
             }
