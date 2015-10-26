@@ -75,6 +75,15 @@ typedef struct block_node
   kma_page_t* pagePtr;
 } blocknode;
 
+typedef struct page_node
+{
+    void* ptr;
+    kma_page_t* pagePtr;
+    void* next;
+    //bitmap struct???
+} pagenode;
+
+
 typedef enum 
 {
     BITMAP, LISTS,DATA
@@ -88,6 +97,7 @@ typedef struct page_head
     void* firstBlock;
     void* ptrs[9];
     int counter;
+    void* pageListHead;
 } pageheader;
 
 
@@ -114,6 +124,8 @@ void coalesce_blocks(void* ptr,kma_size_t size, int fromRecursion);
 blocknode* findBlock(void* ptr, kma_size_t size);
 int findBuddy(void* buddyAddr,kma_size_t size);
 void free_pages();
+void* findPagePtr(void* ptr);
+
 
 /************External Declaration*****************************************/
 
@@ -226,6 +238,8 @@ void free_pages()
 
     
     printf("should be scanning bitmap by page and deleting pages as needed\n");
+    
+    //right now, it just prints all the pages and the freelist at each page
 
     pageheader* page = (pageheader*)(globalPtr->ptr);
     printf("Bitmap page at %p \n ",page);
@@ -257,6 +271,7 @@ void allocate_new_page()
     //allocates new page split in 2 blocks of PAGE_SIZE/2
 
     kma_page_t* newPage = get_page();
+    addPageNode((void*)newPage->ptr, (void*)newPage);
     
     void* leftChildAddr = newPage->ptr;
     void* rightChildAddr = (void*) ((int)(newPage->ptr)+(PAGE_SIZE/2));
@@ -466,9 +481,9 @@ void remove_from_list(blocknode* node)
         page->ptrs[listIndex] = NULL;
         //free the page where that node existed
         
-	pageheader* pageTop = (void*)(((int)node>>13)<<13);
-	printf("*** freeing page for lists of size %d\n",listIndex);        
-	free_page(pageTop->ptr);
+    	pageheader* pageTop = (void*)(((int)node>>13)<<13);
+    	printf("*** freeing page for lists of size %d\n",listIndex);        
+    	free_page(pageTop->ptr);
         return;
     }
 
@@ -615,18 +630,20 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
     if (fBuddy==0)
     {
         //buddy is busy, so not in free block
-        //just take this block out of the list
-        //find the block in the list of blocks
+        
+        //add the block to the list if not already there
+        
        if (fromRecursion==0)
         {
+            //find the block's pagePtr
+            void* pagePtr = findPagePtr(ptr);
+            add_to_list(ptr,size,pagePtr);
 	       return;
         }
         else
         {
 
-    	    blocknode* node = findBlock(ptr,size);
-            //and remove from list(block)
-            remove_from_list(node);
+    	    //do nothing. block already in list
             return;
         }
     }
@@ -649,6 +666,7 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
                 //delete and free the page
                 kma_page_t* pagePtr = buddy->pagePtr;
                 free_page(pagePtr);
+                remove_from_pagelist(pagePtr);
                 //  remove_from_list(node);
 	           //remove the buddy
                 remove_from_list(buddy);
@@ -678,6 +696,7 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
         	blocknode* buddy = findBlock(buddyAddr,size);// printf("buddy address is %p \n",buddy);
         	if (buddy->size*2==PAGE_SIZE) {
 		      free_page(buddy->pagePtr);
+		      remove_from_pagelist(buddy->pagePtr);
 		      remove_from_list(node);
 		      remove_from_list(buddy);
 		      return;
@@ -746,6 +765,140 @@ int findBuddy(void* buddyAddr,kma_size_t size)
     //couldn't find it, return 0
 //	printf("couldn't find it. return 0 \n");
     return 0;
+}
+
+void* findPagePtr(void* ptr)
+{
+    //go through the list of pages until we find one that corresponds
+    //return its pagePtr (the one used to free the page)
+    
+    void* pageToFind = (void*)(((int)ptr>>13)<<13);
+    
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    
+    //list page
+    page = page->next;
+    
+    pagenode* currentPage = (pagenode*)(page->pageListHead);
+    
+    while (currentPage!=NULL)
+    {
+        if (currentPage->ptr==pageToFind)
+        {
+            return currentPage->pagePtr;
+        }
+    }
+    return NULL;
+    
+}
+void addPageNode(void* ptr,void* pagePtr)
+{
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    
+    //list page
+    page = page->next;
+    
+    pagenode* currentPageNode = (pagenode*)(page->pageListHead);
+    pagenode* previousPageNode  = NULL;
+    int i=0;
+
+    if (currentPageNode==NULL)
+    {
+        currentPageNode = (pagenode*)((int)(page) + sizeof(pageListHead));
+        currentPageNode->ptr = ptr;
+        currentPageNode->pagePtr = pagePtr;
+        for (i=0;i<32;i++)
+        {
+            currentPageNode->bitmap[i] = 0;
+        }
+    }
+    else 
+    {
+        while (currentPageNode!=NULL)
+        {
+            previousPageNode = currentPageNode;
+            currentPageNode = currentPageNode->next;
+        }
+        //at the tail now
+        previousPageNode->next = (pagenode*)((int)(previousPageNode) + sizeof(pagenode));
+        pagenode* newPageNode = previousPageNode->next;
+        newPageNode->ptr = ptr;
+        newPageNode->pagePtr = pagePtr;
+        for (i=0;i<32;i++)
+        {
+            newPageNode->bitmap[i] = 0;
+        }
+    }
+}
+
+void remove_from_pagelist(void* pagePtr)
+{
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    
+    //list page
+    page = page->next;
+    
+    pagenode* currentPageNode = (pagenode*)(page->pageListHead);
+    pagenode* previousPageNode  = NULL;
+
+	printf("removing pageNode \n");
+    //removes a block from a list of just the block that we have, does not coalesce. just remove
+    
+    if (currentPageNode==NULL)
+    {
+        //why? 
+        return;
+    }
+
+    while (currentPageNode->pagePtr!=pagePtr)
+    {
+        previousPageNode = currentPageNode;
+        currentPageNode = currentPageNode->next;
+    }
+    //now current has the pointer to the node that we will remove
+    if (previousPageNode==NULL && currentPageNode->next==NULL)
+    {
+        //only one node
+        page->pageListHead = NULL;
+        return;
+    }
+
+    if (currentPageNode->next!=NULL) 
+    {
+        //move everything back by 1 node (within the same size)
+        //move current ahead by one
+	    previousPageNode = currentPageNode;
+        currentPageNode = currentPageNode->next;
+       // previous = previous->next;
+
+        //block to remove is at previous, and step through
+        while(currentPageNode!=NULL)
+        {
+            //copy the block node in front to the back
+            previousPageNode->ptr = currentPageNode->ptr;
+            previousPageNode->next = currentPageNode->next;
+            previousPageNode->pagePtr = currentPageNode->pagePtr;
+            int j=0;
+            for (j=0;j<32;j++)
+            {
+                previousPageNode->bitmap[j] = currentPageNode->bitmap[j];
+            }
+
+
+            //and step to the next element
+            previousPageNode = currentPageNode;
+            currentPageNode = currentPageNode->next;
+        }
+
+        //fix pointers
+        //fix_pointers();
+	return;
+    }
+   //last case, it's the last one but not the first one
+    previousPageNode->next = NULL;
+	return;
+    
+    
 }
 
 
