@@ -175,10 +175,14 @@ void* kma_malloc(kma_size_t size)
         //allocate new page
         //add that as a 'free block' to blocks of size PAGESIZE
         //and return that
-        kma_page_t* newFirstPage = get_page();
+	free_pages();
+       printf("allocating an entire page \n");
+	 kma_page_t* newFirstPage = get_page();
         //add_to_list(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
-	addPageNode(newFirstPage->ptr,(void*)newFirstPage);
-        return newFirstPage->ptr;
+	addPageNode((void*)newFirstPage->ptr,(void*)newFirstPage);
+	printf("RETURN ADDRESS IS %p \n",newFirstPage->ptr);
+        free_pages();
+	return newFirstPage->ptr;
     }
 
     allocate_new_page(); 
@@ -919,54 +923,60 @@ void addPageNode(void* ptr,void* pagePtr)
 {
     
 	pageheader* page = (pageheader*)(globalPtr->ptr);
+	pageheader* globalPg = (pageheader*)(globalPtr->ptr);
+	pagenode* firstPageNode = (pagenode*)(globalPg->pageListHead);
     printf("adding page node for the page located at %p \n",ptr);    
 	
 	while (page->next != NULL)
 	{
+	    if (page->pType==BITMAP) { printf("type bitmap at %p \n",page); }
+	    if (page->pType==LISTS) { printf("type lists at %p \n ",page); }
 	    page = page->next;
 	}
 	
 	//if the last page for page nodes is full, need to create a new page to add more
 	if (page->counter >= 180)
 	{
-	    pagenode* beforeNew = (pagenode*)(page->pageListHead);
+		printf("creating new page of pagenodes \n");
+	    pagenode* beforeNew = firstPageNode;
 	    while (beforeNew->next != NULL)
 	    {
 	        beforeNew = beforeNew->next;
 	    }
 	    
 	    kma_page_t* newPage = get_page();
-        pageheader* newPageHead;
+       		 pageheader* newPageHead;
 
         //put it in the first place 
-        *((kma_page_t**)newPage->ptr) = newPage;
-
-        newPageHead = newPage->ptr;
-        newPageHead->next = NULL;
-        newPageHead->pType = BITMAP;
-        newPageHead->counter=0;
-        newPageHead->pageListHead = page->pageListHead;
-        int i=0;
-        for (i=0;i<=8;i++)
-        {
-            newPageHead->ptrs[i] = page->ptrs[i];
-        }
-        pagenode* newPageNode;
-        newPageNode = (pagenode*)((int)(newPageHead) + sizeof(pageheader));
-        
-        newPageNode->ptr = ptr;
-    	newPageNode->pagePtr = pagePtr;
-	newPageNode->next = NULL;
-    	for (i=0;i<32;i++)
-    	{
-        	newPageNode->bitmap[i] = 0;
-    	}
+        	*((kma_page_t**)newPage->ptr) = newPage;
+		printf("I'm here! line 952 \n");
+        	newPageHead = newPage->ptr;
+        	newPageHead->next = NULL;
+        	newPageHead->pType = BITMAP;
+        	newPageHead->counter=1;
+        	newPageHead->pageListHead = firstPageNode;
+        	int i=0;
+        	for (i=0;i<=8;i++)
+        	{
+        	    newPageHead->ptrs[i] = page->ptrs[i];
+        	}
+		printf("I made it to line 963 \n");
+        	pagenode* newPageNode;
+		printf("new page is at location %p and kma_ptr is %p \n",newPage,newPage->ptr);
+        	newPageNode = (pagenode*)((int)(newPageHead) + sizeof(pageheader));
+        	printf("and the new page node is at %p \n",newPageNode);
+        	newPageNode->ptr = ptr;
+    		newPageNode->pagePtr = pagePtr;
+		newPageNode->next = NULL;
+    		for (i=0;i<32;i++)
+    		{
+        		newPageNode->bitmap[i] = 0;
+    		}
+    		
+    		beforeNew->next = newPageNode;
+    		page->next = newPageHead;
     	
-    	beforeNew->next = newPageNode;
-    	page->next = newPageHead;
-    	
-    	return;
-	    
+    		return;    
 	}
 	
 	//page with list of pages is first page so don't need to go to the next
@@ -993,9 +1003,12 @@ void addPageNode(void* ptr,void* pagePtr)
    	    
    	    //add to the list
    	    page->counter=1;
+		return;
     }
 	else
 	{
+//		free_pages();
+		printf("not at a full page yet \n");
 	    int count = 0;
     	while (currentPageNode!=NULL)
     	{
@@ -1004,10 +1017,11 @@ void addPageNode(void* ptr,void* pagePtr)
         	previousPageNode = currentPageNode;
         	currentPageNode = currentPageNode->next;
     	}
+	printf(" we have %d pagenodes in the total in this page \n",count);
 
 	    printf("Do we get here?\n");
 
-    	//at the tail now
+    	//at the tail nde
     	previousPageNode->next = (pagenode*)((int)(previousPageNode) + sizeof(pagenode));
     	newPageNode = previousPageNode->next;
     	newPageNode->ptr = ptr;
@@ -1016,12 +1030,14 @@ void addPageNode(void* ptr,void* pagePtr)
     	{
         	newPageNode->bitmap[i] = 0;
     	}
-    	
+    	printf("The last pagenode is at %p and the new one at %p \n",previousPageNode,newPageNode);
+	printf("New page node points to data page %p \n",newPageNode->ptr);
     	//add to the page counter
     	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
+	printf("Address of page that holds the page node is %p \n",currentPage);
     	currentPage->counter++;
         printf("New page counter is at %d \n",currentPage->counter);
-
+	return;
 	}
 }
 
