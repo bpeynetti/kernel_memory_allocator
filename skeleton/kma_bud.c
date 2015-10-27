@@ -1089,7 +1089,7 @@ void remove_from_pagelist(void* pagePtr)
     	}
     	
     	//decrease the counter for the page wherever previousPageNode is
-    	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
+    	pageheader* currentPage = (pageheader*)(((int)(previousPageNode)>>13)<<13);
     	currentPage->counter--;
     	
     	if (currentPage->counter==0)
