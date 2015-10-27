@@ -941,16 +941,15 @@ void addPageNode(void* ptr,void* pagePtr)
 
         newPageHead = newPage->ptr;
         newPageHead->next = NULL;
-        newPageHead->pagePtr = newPage;
         newPageHead->pType = BITMAP;
         newPageHead->counter=0;
         newPageHead->pageListHead = page->pageListHead;
         int i=0;
         for (i=0;i<=8;i++)
         {
-            firstPageHead->ptrs[i] = beforeNew->ptrs[i];
+            newPageHead->ptrs[i] = page->ptrs[i];
         }
-        
+        pagenode* newPageNode;
         newPageNode = (pagenode*)((int)(newPageHead) + sizeof(pageheader));
         
         newPageNode->ptr = ptr;
@@ -1016,7 +1015,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	}
     	
     	//add to the page counter
-    	pageheader* currentPage = pageheader*(((int)newPageNode)>>13)<<13;
+    	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
     	currentPage->counter++;
         printf("New page counter is at %d \n",currentPage->counter);
 
@@ -1090,15 +1089,15 @@ void remove_from_pagelist(void* pagePtr)
     	}
     	
     	//decrease the counter for the page wherever previousPageNode is
-    	pageheader* currentPage = pageheader*(((int)previousPageNode)>>13)<<13;
+    	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
     	currentPage->counter--;
     	
     	if (currentPage->counter==0)
     	{
     	    //free that page
     	    printf("freeing a bookkeping page of pagenodes \n");
-    	    pageheader* pPage = pageheader*(globalPtr->ptr);
-    	    if (currentPage->pagePtr!=globalPtr)
+    	    pageheader* pPage = (pageheader*)(globalPtr->ptr);
+    	    if (currentPage->ptr!=globalPtr)
     	    {
     	        //step through until you get to the last one
     	        while (pPage->next!=currentPage)
@@ -1108,7 +1107,7 @@ void remove_from_pagelist(void* pagePtr)
     	        printf("found it, freeing and setting pointer to null \n");
     	        //at the one before the one you will free
     	        //free the page
-    	        free_page(currentPage->pagePtr);
+    	        free_page(currentPage->ptr);
     	        //and set the pointer of next page to null 
     	        pPage->next = NULL;
     	        return;
