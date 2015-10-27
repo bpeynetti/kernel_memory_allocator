@@ -892,20 +892,20 @@ void* findPagePtr(void* ptr)
 	//return its pagePtr (the one used to free the page)
     
 	void* pageToFind = (void*)(((int)ptr>>13)<<13);
-	printf("Page to find: %p \n",pageToFind);
+	//printf("Page to find: %p \n",pageToFind);
 	pageheader* page = (pageheader*)(globalPtr->ptr);
     
 	//no longer have a list page
 	//page = page->next;
     
 	pagenode* currentPage = (pagenode*)(page->pageListHead);
-	printf("firstPage: %p ",currentPage);
+	//printf("firstPage: %p ",currentPage);
 	while (currentPage!=NULL)
 	{
-    printf("currentPage: %p and looking for %p \n",currentPage->ptr,pageToFind);
+    //printf("currentPage: %p and looking for %p \n",currentPage->ptr,pageToFind);
     	if (currentPage->ptr==pageToFind)
     	{
-   	 printf("found page, points to %p \n",currentPage->pagePtr);
+   	 //printf("found page, points to %p \n",currentPage->pagePtr);
         	return currentPage->pagePtr;
     	}
     currentPage = currentPage->next;
@@ -1076,16 +1076,16 @@ void remove_from_pagelist(void* pagePtr)
             	previousPageNode->bitmap[j] = currentPageNode->bitmap[j];
         	}
 
-		if (currentPageNode->next == NULL)
-		{
-		    previousPageNode->next = NULL;
-		    previousPageNode = currentPageNode;
-		}
-		else
-		{
-		    previousPageNode = currentPageNode;
-		}
-        	currentPageNode = currentPageNode->next;
+    		if (currentPageNode->next == NULL)
+    		{
+    		    previousPageNode->next = NULL;
+    		    previousPageNode = currentPageNode;
+    		}
+    		else
+    		{
+    		    previousPageNode = currentPageNode;
+    		}
+            	currentPageNode = currentPageNode->next;
     	}
     	
     	//decrease the counter for the page wherever previousPageNode is
@@ -1100,6 +1100,7 @@ void remove_from_pagelist(void* pagePtr)
     	    if (currentPage->ptr!=globalPtr)
     	    {
     	        //step through until you get to the last one
+    	        printf("loop infinitely here \n");
     	        while (pPage->next!=currentPage)
     	        {
     	            pPage = pPage->next;
