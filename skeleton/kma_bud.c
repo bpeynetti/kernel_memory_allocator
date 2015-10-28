@@ -235,7 +235,7 @@ void kma_free(void* ptr, kma_size_t size)
         void* pagePtr = (void*)(findPagePtr(ptr));
 	update_bitmap(ptr,size);
 	remove_from_pagelist(pagePtr);
-	printf("230 \n");
+	//printf("230 \n");
         free_page(pagePtr);
        // update_bitmap(ptr,size);
         free_pages();
