@@ -165,6 +165,7 @@ void* findPagePtr(void* ptr);
 
 void update_slack(kma_size_t size, int delta);
 int getSlack(kma_size_t size);
+bool isGloballyFree(void* ptr,kma_size_t size);
 
 /************External Declaration*****************************************/
 
@@ -199,7 +200,7 @@ void* kma_malloc(kma_size_t size)
 		void* rAddress = (void*)(returnAddress->ptr);
     	remove_from_list(returnAddress);
 	    //found a free block, update the bitmap
-	    update_slack(size,1);
+	    //update_slack(size,1);
         update_bitmap(rAddress,size);
         return rAddress;
     }
@@ -220,7 +221,7 @@ void* kma_malloc(kma_size_t size)
 		printf("RETURN ADDRESS IS %p \n",newPage->ptr);
        // free_pages();
 		update_bitmap(newPage->ptr,PAGE_SIZE);
-		update_slack(PAGE_SIZE,1);
+		//update_slack(PAGE_SIZE,1);
 		return newPage->ptr;
     }
 
@@ -236,7 +237,7 @@ void* kma_malloc(kma_size_t size)
 		void* rAddress = (void*)(returnAddress->ptr);
 		remove_from_list(returnAddress);
         update_bitmap(rAddress,size);  
-		update_slack(size,1);
+		//update_slack(size,1);
 
       return rAddress;
     }
@@ -282,9 +283,15 @@ void kma_free(void* ptr, kma_size_t size)
         return;
   }
 
-  update_bitmap(ptr,size);
+  void* pagePtr = (void*)(findPagePtr(ptr));
+
+
+  manageFreeSlack(ptr, size, size);
+
   
-  printf("Changing the slack value by adding node of size %d to list \n",size);
+  /*update_bitmap(ptr,size);
+  
+  //printf("Changing the slack value by adding node of size %d to list \n",size);
   //get pagePtr required for the free node
   void* pagePtr = (void*)(findPagePtr(ptr));
 
@@ -302,7 +309,7 @@ void kma_free(void* ptr, kma_size_t size)
 	//since the difference was that not from recursion assumes you didn't add to the free list
 	//but we will have added the node to the free list to look at slack
   coalesce_blocks(ptr,size,0);
-    
+    */
   free_pages();
 
 }
@@ -532,7 +539,17 @@ blocknode* getFreeBlock(kma_size_t size)
     {
         //go into that page
         pageheader* blockPage = (pageheader*)(page->ptrs[index]);
-        return (blocknode*)(blockPage->firstBlock);
+        blocknode* firstFreeBlock = (blocknode*)(blockPage->firstBlock);
+        if (isGloballyFree((void*)firstFreeBlock->ptr, size))
+        {
+            page->slack[index] += 1;
+        }
+        else
+        {
+            page->slack[index] += 2;
+        }
+        return firstFreeBlock;
+        
     }
     else
     {
@@ -577,6 +594,15 @@ kma_size_t adjustSize(kma_size_t num)
 
 blocknode* split_free_to_size(kma_size_t size, blocknode* node)
 {
+    if (isGloballyFree((void*)node, node->size))
+    {
+        update_slack(node->size, 1);
+    }
+    else
+    {
+        update_slack(node->size, 2);
+    }
+    
     if (node->size==size)
     {
         return node;
@@ -605,7 +631,7 @@ void remove_from_list(blocknode* node)
     int listIndex = getListIndex(node->size);
     pageheader* page = (pageheader*)(globalPtr->ptr);    
 
-    update_slack(node->size,1);
+    //update_slack(node->size,1);
 
     //move to list page
     //page = page->next;
@@ -733,7 +759,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     int listIndex = getListIndex(size);
     pageheader* page = (pageheader*)(globalPtr->ptr);  
 
-    update_slack(size,-1);  
+    //update_slack(size,-1);  
 
     //there is no longer a list page
     //page = page->next;
@@ -788,9 +814,53 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
 	printf("created new node at %p whose previous is %p and size is 16 so prev+16 =%p \n",newNode,previous,(void*)((int)previous + 16));
     return newNode;
 }
-void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
+
+void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
+{
+    if (getSlack(size) >= 2)
+  {
+      add_to_list(ptr,size,pagePtr);
+      update_slack(size, -2);
+  }
+  else if (getSlack(size) == 1)
+  {
+      update_bitmap(ptr, size);
+      add_to_list(ptr, size, pagePtr);
+      coalesce_blocks(ptr, size, 0);
+      set_slack(size, 0);
+  }
+  else
+  {
+      update_bitmap(ptr, size);
+      add_to_list(ptr, size, pagePtr);
+      int fromRecursion;
+      if (size == origSize)
+      {
+          fromRecursion = 0;
+      }
+      else
+      {
+          fromRecursion = 1;
+      }
+      blocknode* nextBlock = (blocknode*)(coalesce_blocks(ptr, size, fromRecursion));
+      //need to change coalesce so that it has a return:
+      //if coalescing succeeds, return the coalesced block
+      //otherwise, return the first item in the list in the next size up
+      if (nextBlock != NULL)
+      {
+          //coalesce_blocks returns null only if you reach the page size or the next size up has an empty list
+          manageFreeSlack(nextBlock, size * 2, origSize);
+      }
+      set_slack(size, 0);
+  }
+}
+
+void* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
 {
 //from recurstion -> if 1, will find and remove the block if it was found. otherwise, it won't look for it
+//when fromRecursion = 1, you need to update the bitmap of the current size you are on
+//
+
 
 	printf("trying to coalesce a block at ptr %p and of size: %d \n",ptr,size);
 
@@ -812,13 +882,19 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
    	 printf("not from recursion, so find pointer and add to list \n");
         	void* pagePtr = findPagePtr(ptr);
         	add_to_list(ptr,size,pagePtr);
-       	return;
+        	int listIndex = getListIndex(size);
+        	pageheader* page = (pageheader*)(globalPtr->ptr);
+        	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+       	return blockPage->firstBlock;
     	}
     	else
     	{
    	 printf("from recursion, so do nothing \n");
    	 	//do nothing. block already in list
-        	return;
+        	int listIndex = getListIndex(size);
+        	pageheader* page = (pageheader*)(globalPtr->ptr);
+        	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+       	return blockPage->firstBlock;
     	}
 	}
     
@@ -845,7 +921,7 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
             	printf("784 \n");//  remove_from_list(node);
            	//remove the buddy
             	remove_from_list(buddy);
-            	return;
+            	return NULL;
         	}
         	else
         	{
@@ -863,7 +939,7 @@ void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
             	//remove_from_list(node);
             	remove_from_list(buddy);
 
-            	return coalesce_blocks(parentNode->ptr,parentNode->size,1);
+            	return parentNode;
         	}
     	}   
     	else {
@@ -916,7 +992,7 @@ blocknode* findBlock(void* ptr, kma_size_t size)
 	}
 	return current;
 }
-
+  
 
 int findBuddy(void* buddyAddr,kma_size_t size)
 {
@@ -1245,6 +1321,16 @@ void update_slack(kma_size_t size, int delta)
 	// lines 201 and 238 - kma_malloc -> +1 since SLACK = A-L, adding 1 to A
 }
 
+void set_slack(kma_size_t size, int value)
+{
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    
+    int listIndex = getListIndex(size);
+    
+    page->slack[listIndex] = value;
+    return;
+}
+
 int getSlack(kma_size_t size)
 {
 	pageheader* page = (pageheader*)(globalPtr->ptr);
@@ -1254,5 +1340,32 @@ int getSlack(kma_size_t size)
 	return page->slack[listIndex];
 }
 
+bool isGloballyFree(void* ptr,kma_size_t size)
+{
+    //this function checks whether the bits in question in the bitmap are set
+    
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    pagenode* currentPageNode = (pagenode*)(page->pageListHead);
+    void* searchingPage = (void)((((int)(ptr))>>13)<<13);
+    
+    while (currentPageNode->ptr!=searchingPage)
+    {
+        currentPageNode = currentPageNode->next;
+    }
+    
+    int pageOffset = (int)(ptr) - (int)(currentPageNode->ptr);
+    int startingBit = pageOffset / MIN_SIZE;
+    
+    int startingChar = startingBit / 8;
+    int charOffset = startingBit % 8;
+    
+    //mask should have a 1 in the bit where the block starts in the bitmap
+    char mask = 1 << (7 - charOffset);
+    
+    char globalOrLocal = mask & currentPageNode->bitmap[startingChar];
+    return (globalOrLocal == 0);
+    
+    
+}
 
 #endif // KMA_LZBUD
