@@ -1,5 +1,5 @@
 /***************************************************************************
- *  Title: Kernel Memory Allocator
+
  * -------------------------------------------------------------------------
  *    Purpose: Kernel memory allocator based on the buddy algorithm
  *    Author: Stefan Birrer
@@ -263,19 +263,25 @@ void free_pages()
     printf("Printing lists: \n");
     int flag = 1;
     int j=0;
+    int count=0;
     for (j=0;j<9;j++)
     {
-        printf("\t %d -> %p \n",j,page->ptrs[j]);
+        printf("\t %d -> %p -- %p| \n",j,page->ptrs[j],(int)(page->ptrs[j])+8192);
         if (page->ptrs[j]!=NULL)
         {
+		count=0;
 		flag = 0;
             pageheader* blockPage = (pageheader*)(page->ptrs[j]);
             blocknode* current = blockPage->firstBlock;
-            while (current!=NULL)
+            blocknode* previous = NULL;
+	    while (current!=NULL)
             {
-                printf(" %p -> ",current->ptr);
+               // printf(" %p (%p) -> ",current->ptr,current);
+		previous = current;
                 current = current->next;
-            }
+            	count++;
+	    }
+	    printf("\n COUNT: %d  - ends at %p \n",count,previous);
         }
     }
 	if (flag==1)
@@ -287,6 +293,7 @@ void free_pages()
 	}
 	else {
 		printf("some stuff left.. wait \n");
+		printf("size of node is %d ",sizeof(blocknode));
 	}
 
 
@@ -597,10 +604,10 @@ void remove_from_list(blocknode* node)
         while(current!=NULL)
         {
 
-	    printf("The previous pointer is %p\n", previous->ptr);
-	    printf("Previous->next is %p\n", previous->next);
-	    printf("The current pointer is %p\n", current->ptr);
-	    printf("Current is %p\n", current);
+	 //   printf("The previous pointer is %p\n", previous->ptr);
+	 //   printf("Previous->next is %p\n", previous->next);
+	 //   printf("The current pointer is %p\n", current->ptr);
+	 //   printf("Current is %p\n", current);
 
             //copy the block node in front to the back
             previous->size = current->size;
@@ -608,10 +615,10 @@ void remove_from_list(blocknode* node)
             //previous->next = current->next;
             previous->pagePtr = current->pagePtr;
 	    
-	    printf("The previous pointer is now %p\n", previous->ptr);
-	    printf("Previous->next is %p\n", previous->next);
-	    printf("The current pointer is now %p\n", current->ptr);
-	    printf("Current is %p\n", current);    
+//	    printf("The previous pointer is now %p\n", previous->ptr);
+//	    printf("Previous->next is %p\n", previous->next);
+//	    printf("The current pointer is now %p\n", current->ptr);
+//	    printf("Current is %p\n", current);    
 
 	    if (current->next == NULL)
 	    {
@@ -722,13 +729,13 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
         current = current->next;
     }
     //now add it at the end of that list
-    previous->next = previous+sizeof(blocknode);
+    previous->next = (void*)((int)(previous)+sizeof(blocknode));
     blocknode* newNode = previous->next;
     newNode->ptr = ptr;
     newNode->size = size;
     newNode->next = NULL;
     newNode->pagePtr = pagePtr;
-//	printf("created new node %p which %p points to -> %p (%p) \n",newNode,previous,previous->next,newNode->ptr);
+	printf("created new node at %p whose previous is %p and size is 16 so prev+16 =%p \n",newNode,previous,(void*)((int)previous + 16));
     return newNode;
 }
 void coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
@@ -1009,13 +1016,21 @@ void addPageNode(void* ptr,void* pagePtr)
 	{
 //		free_pages();
 		printf("not at a full page yet \n");
+		printf("page at %p and counter is %d \n",page,page->counter);
 	    int count = 0;
-    	while (currentPageNode!=NULL)
+		printf("stepping through nodes \n");
+	void* cPage; 
+	int flag=0;
+    	while (currentPageNode!=NULL && flag==0)
     	{
 		count++;
-	//	printf("%d pages\n", count);
-        	previousPageNode = currentPageNode;
+//		if (count>500) {	printf("%d pages and node at %p . last page is %p - count: %d vs  %d \n", count,currentPageNode,page,(count%180),page->counter); }
+        	cPage = (void*)((((int)currentPageNode)>>13)<<13);
+	//	if (count>500) { printf("cpage: %p and page: %p\n ",cPage,page); }
+		if (cPage==page && ((count)%180==page->counter)) { flag=1; }
+		previousPageNode = currentPageNode;
         	currentPageNode = currentPageNode->next;
+		
     	}
 	printf(" we have %d pagenodes in the total in this page \n",count);
 
@@ -1063,7 +1078,7 @@ void remove_from_pagelist(void* pagePtr)
 	while (currentPageNode->pagePtr!=pagePtr)
 	{
 
-		printf("IN THE LOOp %p \n",currentPageNode);
+	//	printf("IN THE LOOp %p \n",currentPageNode);
 
     	previousPageNode = currentPageNode;
     	currentPageNode = currentPageNode->next;
@@ -1088,7 +1103,7 @@ void remove_from_pagelist(void* pagePtr)
     	//block to remove is at previous, and step through
     	while(currentPageNode!=NULL)
     	{
-		printf("IN LOOPP\n");
+		printf("IN LOOPP %p -> %p \n",currentPageNode,currentPageNode->ptr);
         	//copy the block node in front to the back
         	previousPageNode->ptr = currentPageNode->ptr;
         	//previousPageNode->next = currentPageNode->next;
@@ -1123,12 +1138,14 @@ void remove_from_pagelist(void* pagePtr)
     	    if (currentPage->ptr!=globalPtr)
     	    {
     	        //step through until you get to the last one
-    	        printf("loop infinitely here \n");
+    	        printf("loop here qwerty \n");
     	        while (pPage->next!=currentPage)
     	        {
+		    printf("going through page %p \n",pPage);
     	            pPage = pPage->next;
     	        }
-    	        printf("found it, freeing and setting pointer to null \n");
+		printf("The current pPage is %p \n",pPage);
+    	        printf("found it, it's %p freeing and setting pointer to null \n",pPage->next);
     	        //at the one before the one you will free
     	        //free the page
     	        free_page(currentPage->ptr);
