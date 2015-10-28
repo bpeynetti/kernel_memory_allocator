@@ -175,14 +175,15 @@ void* kma_malloc(kma_size_t size)
         //allocate new page
         //add that as a 'free block' to blocks of size PAGESIZE
         //and return that
-	free_pages();
+//	free_pages();
        printf("allocating an entire page \n");
-	 kma_page_t* newFirstPage = get_page();
+	kma_page_t* newPage = get_page();
         //add_to_list(newFirstPage->ptr,PAGE_SIZE,newFirstPage);
-	addPageNode((void*)newFirstPage->ptr,(void*)newFirstPage);
-	printf("RETURN ADDRESS IS %p \n",newFirstPage->ptr);
-        free_pages();
-	return newFirstPage->ptr;
+	printf("adding to page node list: pagePtr= %p and page at %p \n",newPage,newPage->ptr);
+	addPageNode((void*)newPage->ptr,(void*)newPage);
+	printf("RETURN ADDRESS IS %p \n",newPage->ptr);
+       // free_pages();
+	return newPage->ptr;
     }
 
     allocate_new_page(); 
@@ -932,15 +933,15 @@ void addPageNode(void* ptr,void* pagePtr)
 	pageheader* page = (pageheader*)(globalPtr->ptr);
 	pageheader* globalPg = (pageheader*)(globalPtr->ptr);
 	pagenode* firstPageNode = (pagenode*)(globalPg->pageListHead);
-    printf("adding page node for the page located at %p \n",ptr);    
+    printf("adding page node for the page located at %p and pagePtr %p \n",ptr,pagePtr);    
 	
 	while (page->next != NULL)
 	{
-	    if (page->pType==BITMAP) { printf("type bitmap at %p \n",page); }
+	    if (page->pType==BITMAP) { printf("type bitmap at %p and counter is %d \n",page,page->counter); }
 	    if (page->pType==LISTS) { printf("type lists at %p \n ",page); }
 	    page = page->next;
 	}
-	
+	printf("Page where we add the node is %p \n",page);	
 	//if the last page for page nodes is full, need to create a new page to add more
 	if (page->counter >= 180)
 	{
@@ -1024,7 +1025,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	while (currentPageNode!=NULL && flag==0)
     	{
 		count++;
-//		if (count>500) {	printf("%d pages and node at %p . last page is %p - count: %d vs  %d \n", count,currentPageNode,page,(count%180),page->counter); }
+		if (count>500) {	printf("%d pages and node at %p . last page is %p - count: %d vs  %d \n", count,currentPageNode,page,(count%180),page->counter); }
         	cPage = (void*)((((int)currentPageNode)>>13)<<13);
 	//	if (count>500) { printf("cpage: %p and page: %p\n ",cPage,page); }
 		if (cPage==page && ((count)%180==page->counter)) { flag=1; }
@@ -1041,6 +1042,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	newPageNode = previousPageNode->next;
     	newPageNode->ptr = ptr;
     	newPageNode->pagePtr = pagePtr;
+	newPageNode->next = NULL;
     	for (i=0;i<32;i++)
     	{
         	newPageNode->bitmap[i] = 0;
@@ -1050,7 +1052,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	//add to the page counter
     	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
 	printf("Address of page that holds the page node is %p \n",currentPage);
-    	currentPage->counter++;
+    	page->counter++;
         printf("New page counter is at %d \n",currentPage->counter);
 	return;
 	}
@@ -1066,7 +1068,7 @@ void remove_from_pagelist(void* pagePtr)
 	pagenode* currentPageNode = (pagenode*)(page->pageListHead);
 	pagenode* previousPageNode  = NULL;
 
-    printf("removing pageNode \n");
+    printf("removing pageNode to page with ptr %p \n",pagePtr);
 	//removes a block from a list of just the block that we have, does not coalesce. just remove
     
 	if (currentPageNode==NULL)
@@ -1078,11 +1080,12 @@ void remove_from_pagelist(void* pagePtr)
 	while (currentPageNode->pagePtr!=pagePtr)
 	{
 
-	//	printf("IN THE LOOp %p \n",currentPageNode);
+		printf("IN THE LOOp %p \n",currentPageNode);
 
     	previousPageNode = currentPageNode;
     	currentPageNode = currentPageNode->next;
 	}
+	printf("out of loop \n");
 	//now current has the pointer to the node that we will remove
 	if (previousPageNode==NULL && currentPageNode->next==NULL)
 	{
@@ -1094,16 +1097,17 @@ void remove_from_pagelist(void* pagePtr)
 
 	if (currentPageNode->next!=NULL)
 	{
+
     	//move everything back by 1 node (within the same size)
     	//move current ahead by one
+	pagenode* node_to_disappear = previousPageNode;
     	previousPageNode = currentPageNode;
     	currentPageNode = currentPageNode->next;
    	// previous = previous->next;
-
     	//block to remove is at previous, and step through
     	while(currentPageNode!=NULL)
     	{
-		printf("IN LOOPP %p -> %p \n",currentPageNode,currentPageNode->ptr);
+		printf("IN LOOPP %p -> %p (next) \n",currentPageNode,currentPageNode->next);
         	//copy the block node in front to the back
         	previousPageNode->ptr = currentPageNode->ptr;
         	//previousPageNode->next = currentPageNode->next;
@@ -1116,18 +1120,22 @@ void remove_from_pagelist(void* pagePtr)
 
     		if (currentPageNode->next == NULL)
     		{
+		    //node_to_disappear->next = NULL;
+		    printf("Add %p we set the next to null \n",previousPageNode);
     		    previousPageNode->next = NULL;
     		    previousPageNode = currentPageNode;
     		}
     		else
     		{
+			node_to_disappear = previousPageNode;
     		    previousPageNode = currentPageNode;
     		}
             	currentPageNode = currentPageNode->next;
     	}
-    	
+        printf("Prev: %p, current: %p \n",previousPageNode,currentPageNode);	
     	//decrease the counter for the page wherever previousPageNode is
     	pageheader* currentPage = (pageheader*)(((int)(previousPageNode)>>13)<<13);
+	printf("Page to decrease counter: %p from %d \n",currentPage,currentPage->counter);
     	currentPage->counter--;
     	
     	if (currentPage->counter==0)
@@ -1144,11 +1152,12 @@ void remove_from_pagelist(void* pagePtr)
 		    printf("going through page %p \n",pPage);
     	            pPage = pPage->next;
     	        }
-		printf("The current pPage is %p \n",pPage);
-    	        printf("found it, it's %p freeing and setting pointer to null \n",pPage->next);
+		printf("The current pPage is %p -> %p \n",pPage,pPage->next);
+    	        printf("found it, we are freeing %p and setting pointer to null \n",pPage->next);
     	        //at the one before the one you will free
     	        //free the page
-    	        free_page(currentPage->ptr);
+		pageheader* evictedPage = pPage->next;
+    	        free_page(evictedPage->ptr);
     	        //and set the pointer of next page to null 
     	        pPage->next = NULL;
     	        return;
