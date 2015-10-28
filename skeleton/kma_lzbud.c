@@ -845,20 +845,20 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
       {
           fromRecursion = 1;
       }
-      void* parentBlock = coalesce_blocks(ptr, size, fromRecursion);
+      blocknode* parentBlock = coalesce_blocks(ptr, size, fromRecursion);
       //need to change coalesce so that it has a return:
       //if coalescing succeeds, return the coalesced block
       //otherwise, return the first item in the list in the next size up
       if (parentBlock != NULL)
       {
           //coalesce_blocks returns null only if you reach the page size or the next size up has an empty list
-          manageFreeSlack(parentBlock, size * 2, origSize);
+          manageFreeSlack((void*)parentBlock, size * 2, origSize);
       }
       set_slack(size, 0);
   }
 }
 
-void* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
+blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
 {
 //from recurstion -> if 1, will find and remove the block if it was found. otherwise, it won't look for it
 //when fromRecursion = 1, you need to update the bitmap of the current size you are on
@@ -1349,7 +1349,7 @@ bool isGloballyFree(void* ptr,kma_size_t size)
     
     pageheader* page = (pageheader*)(globalPtr->ptr);
     pagenode* currentPageNode = (pagenode*)(page->pageListHead);
-    void* searchingPage = (void)((((int)(ptr))>>13)<<13);
+    void* searchingPage = (void*)((((int)(ptr))>>13)<<13);
     
     while (currentPageNode->ptr!=searchingPage)
     {
