@@ -154,7 +154,7 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node);
 void remove_from_list(blocknode* node);
 void fix_pointers();
 blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr);
-void coalesce_blocks(void* ptr,kma_size_t size, int fromRecursion);
+blocknode* coalesce_blocks(void* ptr,kma_size_t size, int fromRecursion);
 blocknode* findBlock(void* ptr, kma_size_t size);
 int findBuddy(void* buddyAddr,kma_size_t size);
 void free_pages();
@@ -166,6 +166,8 @@ void* findPagePtr(void* ptr);
 void update_slack(kma_size_t size, int delta);
 int getSlack(kma_size_t size);
 bool isGloballyFree(void* ptr,kma_size_t size);
+void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize);
+
 
 /************External Declaration*****************************************/
 
