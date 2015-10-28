@@ -641,6 +641,7 @@ void remove_from_list(blocknode* node)
     }
    //last case, it's the last one but not the first one
     previous->next = NULL;
+
 	return;
 }
 
@@ -1133,7 +1134,12 @@ void remove_from_pagelist(void* pagePtr)
             	currentPageNode = currentPageNode->next;
     	}
         printf("Prev: %p, current: %p \n",previousPageNode,currentPageNode);	
-    	//decrease the counter for the page wherever previousPageNode is
+    	//decrease the counter for the page wherever previousPageNode is 
+}
+else {
+	previousPageNode->next = NULL;
+}
+//now decrease the counter 
     	pageheader* currentPage = (pageheader*)(((int)(previousPageNode)>>13)<<13);
 	printf("Page to decrease counter: %p from %d \n",currentPage,currentPage->counter);
     	currentPage->counter--;
@@ -1168,10 +1174,10 @@ void remove_from_pagelist(void* pagePtr)
     	//fix pointers
     	//fix_pointers();
         return;
-	}
+//	}
    //last case, it's the last one but not the first one
-	previousPageNode->next = NULL;
-    return;
+//	previousPageNode->next = NULL;
+ //   return;
     
     
 }
