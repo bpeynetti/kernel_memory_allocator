@@ -108,17 +108,18 @@ void fail();
 /**************Implementation***********************************************/
 
 //timing stuff
-float malloc_avg,free_avg,malloc_worst,free_worst;
-float cpu_time_free, cpu_time_malloc;
-float startFree, endFree,startMalloc,endMalloc;
-float freeRequests,mallocRequests;
-
-freeRequests = 0.0;
-mallocRequests = 0.0;
-malloc_worst = 0.0;
-free_worst = 0.0;
-malloc_avg = 0.0;
-free_avg = 0.0;
+float freeRequests = 0.0;
+float mallocRequests = 0.0;
+float malloc_worst = 0.0;
+float free_worst = 0.0;
+float malloc_avg = 0.0;
+float free_avg = 0.0;
+float cpu_time_free = 0.0;
+float cpu_time_malloc = 0.0;
+float startFree = 0.0;
+float endFree = 0.0;
+float startMalloc = 0.0;
+float endMalloc = 0.0;
 
 int anyMismatches = 0;
 
