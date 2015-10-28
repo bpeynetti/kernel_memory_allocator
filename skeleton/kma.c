@@ -60,6 +60,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 /************Private include**********************************************/
 #include "kma_page.h"
@@ -105,6 +106,19 @@ void fail();
 
 
 /**************Implementation***********************************************/
+
+//timing stuff
+double malloc_avg,free_avg,malloc_worst,free_worst;
+double cpu_time_free, cpu_time_malloc;
+double startFree, endFree,startMalloc,endMalloc;
+double freeRequests,mallocRequests;
+
+freeRequests = 0;
+mallocRequests = 0;
+malloc_worst = 0;
+free_worst = 0;
+malloc_avg = 0;
+free_avg = 0;
 
 int anyMismatches = 0;
 
@@ -227,6 +241,16 @@ main(int argc, char* argv[])
   
   printf("Page Requested/Freed/In Use: %5d/%5d/%5d\n",
 	 stat->num_requested, stat->num_freed, stat->num_in_use);	
+	 
+	 malloc_avg = malloc_avg / mallocRequests;
+	 
+	 printf("Malloc Requests/AvgTime/WorstTime: %G/%G/%G seconds \n",
+	  mallocRequests,malloc_avg,malloc_worst);
+	  
+	  free_avg = free_avg / freeRequests;
+	  
+	 printf("Free Requests/AvgTime/WorstTime: %G/%G/%G seconds \n",
+	  freeRequests, free_avg, free_worst);
   
   if (stat->num_requested != stat->num_freed || stat->num_in_use != 0)
     {
@@ -280,7 +304,17 @@ allocate(mem_t* requests, int req_id, int req_size)
   assert(new->state == FREE);
   
   new->size = req_size;
+  
+  startMalloc = clock();
   new->ptr = kma_malloc(new->size);
+  endMalloc = clock();
+  cpu_time_malloc = ((double)(endMalloc - startMalloc)) / CLOCKS_PER_SEC;
+  malloc_avg += cpu_time_malloc;
+  if (cpu_time_malloc > malloc_worst)
+  {
+    malloc_worst = cpu_time_malloc;
+  }
+  mallocRequests++;
   
   // Accept a NULL response in some cases... 
   if(!(((new->ptr != NULL) && (new->size <= (PAGESIZE - sizeof(void*))))
@@ -334,8 +368,20 @@ deallocate(mem_t* requests, int req_id)
   free(cur->value);
 #endif
 
+  startFree = clock();
   kma_free(cur->ptr, cur->size);
-
+  endFree = clock();
+  //add to time
+  cpu_time_free = ((double)(endFree - startFree)) / CLOCKS_PER_SEC;
+  
+  free_avg+= cpu_time_free;
+  if (cpu_time_free > free_worst)
+  {
+    free_worst = cpu_time_free;
+  }
+  freeRequests++;
+  
+  
   currentAllocBytes -= cur->size;
   
   cur->state = FREE;
