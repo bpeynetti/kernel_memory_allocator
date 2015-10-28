@@ -164,7 +164,7 @@ void* kma_malloc(kma_size_t size)
 	void* rAddress = (void*)(returnAddress->ptr);
     	remove_from_list(returnAddress);
 	    //found a free block, update the bitmap
-        //update_bitmap(returnAddress,size);
+        update_bitmap(rAddress,size);
         return rAddress;
     }
     
@@ -183,6 +183,7 @@ void* kma_malloc(kma_size_t size)
 	addPageNode((void*)newPage->ptr,(void*)newPage);
 	printf("RETURN ADDRESS IS %p \n",newPage->ptr);
        // free_pages();
+	update_bitmap(newPage->ptr,PAGE_SIZE);
 	return newPage->ptr;
     }
 
@@ -197,7 +198,7 @@ void* kma_malloc(kma_size_t size)
         //update bitmap, return
 	void* rAddress = (void*)(returnAddress->ptr);
 	remove_from_list(returnAddress);
-        //update_bitmap(returnAddress,size);  
+        update_bitmap(rAddress,size);  
       return rAddress;
     }
     
@@ -232,15 +233,16 @@ void kma_free(void* ptr, kma_size_t size)
     
         //remove it as if it was a free node
         void* pagePtr = (void*)(findPagePtr(ptr));
+	update_bitmap(ptr,size);
 	remove_from_pagelist(pagePtr);
 	printf("230 \n");
         free_page(pagePtr);
-        //update_bitmap(ptr,size);
+       // update_bitmap(ptr,size);
         free_pages();
         return;
   }
 
-  //update_bitmap(ptr,size);
+  update_bitmap(ptr,size);
   
 	printf("coalescing blocks if possible\n");
   coalesce_blocks(ptr,size,0);
@@ -330,17 +332,22 @@ void update_bitmap(void* ptr,kma_size_t size)
     //find the page where the pointer points to using the addresses of each page in the page list and the page size
     //find which bits in the bitmap to change
     //XOR the bits in question with 1 to flip them
-    
+ //  printf("hi, trying to update bitmap at %p of size %d \n",ptr,size); 
     pageheader* page = (pageheader*)(globalPtr->ptr);
     
     pagenode* currentPageNode = (pagenode*)(page->pageListHead);
+    void* searchingPage = (void*)((((int)(ptr))>>13)<<13); 
     
-    while (!((void*)(ptr) > (void*)(currentPageNode->ptr) && (void*)(ptr) < (void*)((int)(currentPageNode->ptr) + PAGE_SIZE)))
+//	printf("searching for page %p \n",searchingPage);
+//	printf("as a start, %p vs %p \n",currentPageNode->ptr,searchingPage);	
+while (currentPageNode->ptr!=searchingPage)
+   // while (!((void*)(ptr) > (void*)(currentPageNode->ptr) && (void*)(ptr) < (void*)((int)(currentPageNode->ptr) + PAGE_SIZE)))
     {
+//	printf("current page node points to page: %p \n",currentPageNode->ptr);
         currentPageNode = currentPageNode->next;
     }
     //now you have reached the page that contains the specified address
-    
+  //  printf("here\n");
     //offset within the page
     int pageOffset = (int)(ptr) - (int)(currentPageNode->ptr);
     int startingBit = pageOffset / MIN_SIZE;
@@ -366,6 +373,7 @@ void update_bitmap(void* ptr,kma_size_t size)
     //size fits into a part of one char of the bitmap
     if (sizeInChars == 0)
     {
+//	printf("this case \n");
         //go through the bits in the char that need to be changed
         int i;
         for (i = charOffset; i < charOffset + bitsInChar; i++)
@@ -376,16 +384,19 @@ void update_bitmap(void* ptr,kma_size_t size)
     //size fills at least one full char in the bitmap
     else
     {
+//	printf("this other case \n");
         //go through all the chars that you need to update, and update all of their bits
         int j;
         for (j = startingChar; j < startingChar + sizeInChars; j++)
         {
+	//	printf("j:%d : ",j);
             int k;
             for (k = 0; k < 8; k++)
             {
                 currentPageNode->bitmap[j] ^= 1 << (k);
             }
-        }
+        //	printf("%p \n",currentPageNode->bitmap[j]);
+	}
     }
     
     
