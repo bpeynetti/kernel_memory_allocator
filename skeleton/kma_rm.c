@@ -648,7 +648,7 @@ void freeMyPage(pageheader* page)
 	//	printf("Addr: %p,%p, Ctr: %d -> ", pageIterator,pageIterator->ptr, pageIterator->counter);
 		pageIterator = pageIterator->next;
 	}
-	printf("\n");
+	//printf("\n");
  	
 
     //
