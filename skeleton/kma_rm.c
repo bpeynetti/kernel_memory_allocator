@@ -217,7 +217,7 @@ void* findFreeBlock(kma_size_t size)
     pageHead = (pageheader*) (globalPtr->ptr);
     blockheader* current = pageHead->blockHead;
     
-    pageheader* currentPage = pageHead;
+    //pageheader* currentPage = pageHead;
     blockheader* returnAddr = NULL;
     
     kma_size_t oldSize;
@@ -226,7 +226,7 @@ void* findFreeBlock(kma_size_t size)
     //printf("free block starts at %p\n",current); 
     while (current!=NULL)
     {
-       currentPage = (pageheader*)(((int)current>>13)<<13);
+       // currentPage = (pageheader*)(((int)current>>13)<<13);
 	  // printf("Page looked at: %p and counter is %d\n",currentPage,currentPage->counter);
         //now go through the list and find a free block
         if (current->size >= size)

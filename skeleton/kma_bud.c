@@ -269,7 +269,7 @@ void free_pages()
     int count=0;
     for (j=0;j<9;j++)
     {
-        printf("\t %d -> %p -- %p| \n",j,page->ptrs[j],(int)(page->ptrs[j])+8192);
+        //printf("\t %d -> %p -- %p| \n",j,page->ptrs[j],(int)(page->ptrs[j])+8192);
         if (page->ptrs[j]!=NULL)
         {
 		count=0;
@@ -558,9 +558,10 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node)
         kma_page_t* childrenPage = (kma_page_t*)(node->pagePtr);
         kma_size_t childrenSize = node->size/2;
         remove_from_list(node);
+        
+        blocknode* lChild = add_to_list(rightChild,childrenSize,childrenPage);
 
-        blocknode* lChild = add_to_list(leftChild,childrenSize,childrenPage);
-        blocknode* rChild = add_to_list(rightChild,childrenSize,childrenPage);
+        lChild = add_to_list(leftChild,childrenSize,childrenPage);
         return split_free_to_size(size,lChild);
     }
 }
@@ -1112,7 +1113,7 @@ void remove_from_pagelist(void* pagePtr)
 
     	//move everything back by 1 node (within the same size)
     	//move current ahead by one
-	pagenode* node_to_disappear = previousPageNode;
+	   //pagenode* node_to_disappear = previousPageNode;
     	previousPageNode = currentPageNode;
     	currentPageNode = currentPageNode->next;
    	// previous = previous->next;
@@ -1139,7 +1140,7 @@ void remove_from_pagelist(void* pagePtr)
     		}
     		else
     		{
-			node_to_disappear = previousPageNode;
+			//node_to_disappear = previousPageNode;
     		    previousPageNode = currentPageNode;
     		}
             	currentPageNode = currentPageNode->next;
