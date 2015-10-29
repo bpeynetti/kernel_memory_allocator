@@ -822,7 +822,14 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     newNode->size = size;
     newNode->next = NULL;
     newNode->pagePtr = pagePtr;
-    newNode->local = 0;
+    if (getSlack(size) >= 2)
+    {
+        newNode->local = 1;
+    }
+    else
+    {
+        newNode->local = 0;
+    }
 	printf("created new node at %p whose previous is %p and size is 16 so prev+16 =%p \n",newNode,previous,(void*)((int)previous + 16));
     return newNode;
 }
@@ -841,7 +848,7 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
     
     if (getSlack(size) >= 2)
   {
-      node->local = 1;
+      //node->local = 1;
       add_to_list(ptr,size,pagePtr);
       update_slack(size, -2);
   }
@@ -856,7 +863,7 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
 */
   else
   {
-      node->local = 0;
+      //node->local = 0;
       update_bitmap(ptr, size);
       //add_to_list(ptr, size, pagePtr);
       int fromRecursion;
