@@ -34,7 +34,7 @@
  ************************************************************************/
  
  /************************************************************************
- Project Group: NetID1, NetID2, NetID3
+ Project Group: bpv512,jjk612
  
  ***************************************************************************/
 
@@ -107,7 +107,7 @@ typedef struct page_head
 //number of free lists for a minimum size of 32 is 8:
 //free lists for sizes 32, 64, 128, 256, 512, 1024, 2048, 4096
 kma_page_t* globalPtr = NULL;
-int requestNumber = 0;
+//int requestNumber = 0;
 
 /************Function Prototypes******************************************/
 void initialize_books();
@@ -136,7 +136,7 @@ void* findPagePtr(void* ptr);
 
 void* kma_malloc(kma_size_t size)
 {
-    requestNumber++;
+   // requestNumber++;
     //printf("\n\n REQUEST NUMBER %d TO ALLOCATE BLOCK OF SIZE %d\n",requestNumber,size);
 
     size = adjustSize(size);
@@ -211,25 +211,13 @@ void* kma_malloc(kma_size_t size)
 void kma_free(void* ptr, kma_size_t size)
 {
 
-    requestNumber++;
+    //requestNumber++;
     //printf("\n\n REQUEST NUMBER %d TO FREE BLOCK %p  OF SIZE %d\n",requestNumber,ptr,size);
 
   size = adjustSize(size);
     
   if (size==PAGE_SIZE){
-    
-        //figure out the page that will be freed
-        //pageheader* page = (pageheader*)(globalPtr->ptr);    
-        //move on to the list page
-        //page = page->next;
-        //move on to the full page blocks page
-        //pageheader* blockPage = (pageheader*)(page->ptrs[8]);
-        //blocknode* firstNode = (blocknode*)blockPage->firstBlock;
-        //now find it
-        //while (firstNode->ptr!=ptr)
-        //{
-        //    firstNode = firstNode->next;
-        //}
+
     
         //remove it as if it was a free node
         void* pagePtr = (void*)(findPagePtr(ptr));
@@ -253,11 +241,6 @@ void kma_free(void* ptr, kma_size_t size)
 
 void free_pages()
 {
-
-    
-    //printf("should be scanning bitmap by page and deleting pages as needed\n");
-    
-    //right now, it just prints all the pages and the freelist at each page
 
     pageheader* page = (pageheader*)(globalPtr->ptr);
     //printf("Bitmap page at %p \n ",page);
@@ -294,10 +277,10 @@ void free_pages()
 		free_page(globalPtr);
 		globalPtr = NULL;
 	}
-	else {
+// 	else {
 		//printf("some stuff left.. wait \n");
 		//printf("size of node is %d ",sizeof(blocknode));
-	}
+// 	}
 
 
 }
@@ -431,36 +414,7 @@ globalPtr = newFirstPage;
     }
     // firstPageHead->ptrs = NULL;
 
-    
-    //kma_page_t* newListPage = get_page();
-    //*((kma_page_t**)newListPage->ptr) = newListPage;
-    
-    //pageheader* newListPageHead = newListPage->ptr;
-    //pageheader* secondPagePtr = newListPage->ptr;
-    //newListPageHead->next = NULL;
-    //newListPageHead->counter=0;
-    //newListPageHead->pType = LISTS;
-    //newListPageHead->firstBlock = NULL;
-    //i=0;
-    //for (i=0;i<=8;i++)
-    //{
-    //    newListPageHead->ptrs[i] = NULL;
-	//printf("Pointer %d location is %p \n",i,newListPageHead->ptrs[i]);
-    //}
-    
-    //make them connected
-    //firstPageHead->next = newListPageHead;
-	//printf("ptr first: %p \n",firstPageHead->next);
-	//firstPageHead->next = newListPage->ptr;    
-	//printf("ptr after: %p \n",firstPageHead->next);
-//	globalPtr->ptr = firstPageHead;
-	//printf("global Ptr points to : %p\n",globalPtr->ptr); 
-    //printf("bitmap page: %p points to %p \n",firstPageHead,firstPageHead->next);
-    //printf("list page: %p points to %p\n",newListPageHead,newListPageHead->next);
-	//firstPageHead->next = newListPage->ptr;
-	//printf("bitmap page: %p points to : %p \n",firstPageHead,firstPageHead->next);  
-	//printf("global ptr points to %p \n",globalPtr->ptr);
-	//printf("END OF INITIALIZING BOOK KEEPING -----------------\n\n");
+  
   return;
 }
 

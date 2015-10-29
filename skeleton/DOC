@@ -1,0 +1,147 @@
+--------------------
+REPORT - KERNEL MEMORY ALLOCATOR
+
+JACOB KOBZA - jjk613
+BRUNO PEYNETTI - bpv512
+
+EECS 343 - OS
+
+-----------------
+
+We implemented buddy, resource map, and lazy buddy (SVR4). 
+
+NOTE: Lazy buddy did not complete all requests. We did not have time to finish implementing the algorithm correctly and thus we are submitting what we have. Please see attached code. 
+
+Resource map
+	- We implemented resource map with the first-fit algorithm. We have a list of free blocks linked to the next free block via the header. Each header has the elements size and next. This forces the smallest available block to be 32 bytes. 
+	- Additionally, we have all the pages connected to each other via headers within the pages. This takes some space from every page, which means the maximum block size is lower than 8192. This creates a linked list of pages. 
+
+Buddy
+	- We implemented the buddy algorithm with separate bookkeeping pages and data pages. That way, the maximum data block we can allocate is PAGE_SIZE (8192). 
+	- Bookkeping pages
+		- 
+			Main page (1st one): works with initalize_blocks() function and creates 1 page. This page will hold a singly linked list of page nodes. In the case that there are too many page nodes for that one bookkeping page (around 180) we get a new page and continue there.
+		- 
+			Page Node: This page node has information about the data page that has been allocated. This is a linked list and we attempted to optimize size rather than speed by making it as small as possible and 'moving' the information in the nodes back whenever we removed a node. Otherwise, we would have ended up either sorting the nodes or calling too many pages. We rarely ever used more than 3 pages to store our linked list of page nodes. 
+		-
+			Each page node has information on pointer to free the page, next, and a pagePtr (the kma_page_t* to free the page) 
+		- 
+			Each main page has a list of pointers to the pages that hold the free lists. 	Each page will hold nodes of different sizes. Each free list page has a pointer to the beginning of the list of free nodes of that given size. From there, we have lists of nodes of the free blocks with equal size. Each node has a pointer to the actual data block, next, and pagePtr (which holds the reference to free the page when you have to free a data page)
+		- 
+			Even though this is expensive in terms of time, we allocate and free pages as soon as the free list becomes empty. This way, we save as much space as possible. 
+		- 
+			When removing a node from the free list, we 'move' everything back by the size of one block node. This allows for very small use of space and have only one page for each free list. By making the block node as small as possible, we managed to fit around 500 nodes in one page, preventing the need having many pages for each free list. 
+
+
+Lazy Buddy
+	- We implemented lazy buddy using the buddy algorithm as a base for our algorithm. We added the slack value for each class of free list. 
+	- The bookkeping pages, page nodes, pages of free lists, and free list nodes are all the same. 
+	- We added an array of 8 int to hold the slack values per class, and put this array on the pageheader for each page. 
+
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ANALYSYS
+
+++ Comparison by utilization factor (ratio of total memory requested vs requested to satisfy the update) ++
+
+In order to calculate UTILIZATION FACTOR, we calculated the ratio of the total amount of memory requested vs the total amount of memory allocated
+
+The table below shows the maximum amount of memory allocated / maximum memory requested (from the traces) for both algorithms that worked over all traces. 
+
+            Ratio of max memory allocated / max memory requested 
+			Buddy System	Resource Map
+TRACE 1		7.94638448		1.484479718
+TRACE 2		1.725194908		1.267490136
+TRACE 3		1.413478901		1.16702617
+TRACE 4		1.364759651		1.178107084
+TRACE 5		1.43476232		1.580215587
+
+If we look at the numbers above, we can see that for the peak state of the trace (when the memory requested is at its maximum), Buddy fails to perform better than resource map. This is because Resource map will 'waste' space by having the block headers and page headers, and some fragmentation. Nevertheless, as the number of requests increased and the size of the requests increased (TRACE 4) the buddy system improves. 
+
+Resource Map seems to be better at maintaining a smaller fragmentation. The reason for this as well is the actual requests. For example, a request for 5000 bytes would likely take less space in resource map, since in buddy it will result in an entire page being allocated (8192 bytes). This creates a lot of waste. 
+
+On the contrary, the buddy system is better at handling a 'high churn' trace such as trace 5. Nevertheless, proper coalescing in resource map might improve its performance. 
+
+This is a better metric than the total memory used by an algorithm / total memory requests since total memory requests could double count memory that the algorithm would not. For example, if we request 8, free that, and request 8 again, the algorithm will probably not request new pages. 
+
+++
+++ Worst/Average free/malloc latencies and comparisons
+++
+
+The worst and average cases for latencies and comparisons are down:
+
+
+MALLOC LATENCIES (times in seconds)		
+
+				Avg			Worst
+Buddy
+	Trace 1		5.05E-05	5.02E-03
+	Trace 2		5.74E-06	5.50E-05
+	Trace 3		1.45E-06	4.20E-03
+	Trace 4		6.82E-06	7.11E-02
+	Trace 5		1.83E-06	8.78E-03
+Resource map	
+	Trace 1		4.69E-05	3.84E-03
+	Trace 2		4.33E-06	4.61E-03
+	Trace 3		1.74E-05	6.95E-02
+	Trace 4		4.18E-05	1.26E-01
+	Trace 5		1.02E-04	1.40E-01
+- - - - - - - - - - - - - - - - - - - - - - - 
+FREE LATENCIES (times in seconds)
+
+				Avg			Worst
+Buddy	
+	Trace 1		1.84E-06	1.27E-04
+	Trace 2		6.30E-07	2.19E-04
+	Trace 3		1.82E-06	1.36E-04
+	Trace 4		1.56E-05	6.63E-02
+	Trace 5		1.65E-06	7.60E-02
+Resource map	
+	Trace 1		2.09E-06	1.02E-04
+	Trace 2		8.56E-07	1.16E-04
+	Trace 3		2.81E-05	7.81E-02
+	Trace 4		6.98E-05	8.37E-02
+	Trace 5		1.04E-04	1.41E-01
+- - -- - - - - - - - - - - - - - - - - - - - - - 
+
+We can see from above that in terms of timing, Buddy system allocation is significantly (orders of magnitude) better than resource map in both malloc and free requests. This will be further discussed in the remainder of the report, when analyzing O runtime. 
+
+Malloc latencies decrease significantly for buddy the larger the trace. This is probably due to it having a lot of free lists where to 'take' free blocks from. This way, a malloc is quick since it just find the right list and returns the first block from that list. A slight overhead is (as mentioned before) our implementation of removing the node, which saves space but forces us to walk through the entire free list every time. 
+
+Free latencies are again orders of magnitude better in buddy compared to resource map. This is due to the fact that we do not have to walk through the entire list of allocated blocks to get to the node to free, and we can easily find the node by knowing the size. Unfortunately, there is an overhead that involves coalescing and so that hits the runtime of the algorithm. On the contrary, resource map will be directly affected by the size of the trace, since the longer the list is, the longer it will take to (on average) find a free block and remove it. An example of this is removing nodes from the end of the entire list, where a block has to be first found by traversing the entire list, and if a page is to be freed, then the entire page freeing procedure comes in, which also takes a significant amount of time. 
+
+Worst case runtimes also have a significant difference in buddy system vs resource map. In buddy system, a malloc worst case would involve perhaps splitting a full block into the smallest size and putting the new free blocks in the free lists. This would not take as long as in resource map, where it would have to traverse the entire list until it determines that it needs to fetch a new page. If we see the case of trace 5, the worst case is 1/10 of a second which suggests it walked through the entire list and then had to allocate a page and fix all respective pointers, before returning the new address. 
+
+We expect lazy buddy to have better latencies than the other 2 algorithms. Lazy buddy with a SLACK fixed to 0 becomes simply buddy system allocation. When we let the SLACK value change, then we avoid coalescing when we don't have to. This reduces the overhead. The worst time might not be affected much since a large coalescing or splitting of a block will be similar to buddy sytem, but the chances of finding a free block are higher. Additionally, its performance on free requests would improve on average since it would not attempt to coalesce (and therefore, waste time) as much as buddy would. 
+
+++
+++ RUNTIMES
+++
+
+The following table shows runtimes for our algorithms for each trace. A discussion follows. 
+
+			Total 				Execution time (user)	(time in seconds)
+			Bytes requested		Buddy	Resource Map
+TRACE 1		21206				0			0
+TRACE 2		637930				0			0
+TRACE 3		11781190			0.14		0.45
+TRACE 4		20069654			0.22		2.3
+TRACE 5		114818834			0.85		24.14
+
+We can clearly see here that our analysis of malloc and free was correct in stating that the procedures on buddy are orders of magnitude faster than resource map. 
+
+Analyzing this data in Excel gave us the following runtimes. 
+NOTE: n = total number of bytes requested 
+
+BUDDY => O(n) - Buddy is linear. See the case from trace 3 to trace 4, the total number of bytes increases by 2 and the execution time increases roughly by 2. Then from trace 4 to 5, the input n increases by a factor of 5 and the runtime by a factor of 4. Knowing that runtimes are not exact, we can infer that this is approximately O(n)
+
+RESOURCE MAP => O(n^2). Resource map is approximately O(n^2). The reason for our assumption is the polynomial increase in time. As an example, multiplying the input size (trace 3 to 4) by 2 increased the output by a factor of approximately 5. Similarly, the runtime increases by a factor of 10 when the input size increases by roughly a factor of 4. NOTE: In terms of the actual algorithm, resource map can be seen as an O(n) algorithm where n = number of free blocks, since it is simply one long linked list.
+
+++
+++ Plots
+++
+
+Please see attached the plots for our executions. These are labeled according to the trace and the type of memory allocation used for that trace. 
+
+

@@ -37,7 +37,7 @@
  ************************************************************************/
 
 /************************************************************************
- Project Group: NetID1, NetID2, NetID3
+ Project Group: bpv512,jjk612
  
  ***************************************************************************/
  
@@ -831,13 +831,13 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
 {
     
     void* pagePtr = (void*)(findPagePtr(ptr));
-    pageheader* page = (pageheader*)(globalPtr->ptr);
+    /*pageheader* page = (pageheader*)(globalPtr->ptr);
     pageheader* blockList = (pageheader*)(page->ptrs[getListIndex(size)]);
     blocknode* node = (blocknode*)(blockList->firstBlock);
     while ((void*)(node->ptr) != ptr)
     {
         node = node->next;
-    }
+    }*/
     
     if (getSlack(size) >= 2)
   {
