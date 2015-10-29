@@ -103,6 +103,7 @@ typedef struct block_node
   void* ptr;
   void* next;
   kma_page_t* pagePtr;
+  int local;
 } blocknode;
 
 typedef struct page_node
@@ -545,7 +546,7 @@ blocknode* getFreeBlock(kma_size_t size)
         //go into that page
         pageheader* blockPage = (pageheader*)(page->ptrs[index]);
         blocknode* firstFreeBlock = (blocknode*)(blockPage->firstBlock);
-        if (isGloballyFree((void*)firstFreeBlock->ptr, size))
+        if (firstFreeBlock->local == 0)
         {
             page->slack[index] += 1;
         }
@@ -599,14 +600,15 @@ kma_size_t adjustSize(kma_size_t num)
 
 blocknode* split_free_to_size(kma_size_t size, blocknode* node)
 {
-    if (isGloballyFree((void*)node->ptr, node->size))
+    if (node->local == 1)
     {
         update_slack(node->size, 1);
+        update_slack(node->size / 2, -2);
     }
-    else
-    {
-        update_slack(node->size, 2);
-    }
+    // else
+    // {
+    //     update_slack(node->size, 2);
+    // }
     
     if (node->size==size)
     {
@@ -618,6 +620,10 @@ blocknode* split_free_to_size(kma_size_t size, blocknode* node)
         //make children and recurse on left child
         void* leftChild = (void*)(node->ptr);
         void* rightChild = (void*)((int)(leftChild) + ((int)node->size)/2);
+        blocknode* left = (blocknode*)(leftChild);
+        blocknode* right = (blocknode*)(rightChild);
+        left->local = node->local;
+        right->local = node->local;
         kma_page_t* childrenPage = (kma_page_t*)(node->pagePtr);
         kma_size_t childrenSize = node->size/2;
         remove_from_list(node);
@@ -816,6 +822,7 @@ blocknode* add_to_list(void* ptr,kma_size_t size, kma_page_t* pagePtr)
     newNode->size = size;
     newNode->next = NULL;
     newNode->pagePtr = pagePtr;
+    newNode->local = 0;
 	printf("created new node at %p whose previous is %p and size is 16 so prev+16 =%p \n",newNode,previous,(void*)((int)previous + 16));
     return newNode;
 }
@@ -824,9 +831,17 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
 {
     
     void* pagePtr = (void*)(findPagePtr(ptr));
+    pageheader* page = (pageheader*)(globalPtr->ptr);
+    pageheader* blockList = (pageheader*)(page->ptrs[getListIndex(size)]);
+    blocknode* node = (blocknode*)(blockList->firstBlock);
+    while ((void*)(node->ptr) != ptr)
+    {
+        node = node->next;
+    }
     
     if (getSlack(size) >= 2)
   {
+      node->local = 1;
       add_to_list(ptr,size,pagePtr);
       update_slack(size, -2);
   }
@@ -841,6 +856,7 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
 */
   else
   {
+      node->local = 0;
       update_bitmap(ptr, size);
       //add_to_list(ptr, size, pagePtr);
       int fromRecursion;
