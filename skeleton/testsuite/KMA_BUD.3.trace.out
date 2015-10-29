@@ -1,0 +1,5 @@
+./KMA_BUD: Running in correctness mode
+Page Requested/Freed/In Use:  4994/ 4994/    0
+Malloc Requests/AvgTime/WorstTime: 10000/1.51221E-06/0.002697 seconds 
+Free Requests/AvgTime/WorstTime: 10000/1.78951E-06/0.000893 seconds 
+Test: PASS

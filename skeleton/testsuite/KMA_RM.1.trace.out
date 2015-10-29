@@ -1,0 +1,5 @@
+./KMA_RM: Running in correctness mode
+Page Requested/Freed/In Use:     3/    3/    0
+Malloc Requests/AvgTime/WorstTime: 100/3.191E-05/0.003164 seconds 
+Free Requests/AvgTime/WorstTime: 100/6.51E-06/0.000634 seconds 
+Test: PASS

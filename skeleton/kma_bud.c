@@ -259,11 +259,11 @@ void free_pages()
 		flag = 0;
             pageheader* blockPage = (pageheader*)(page->ptrs[j]);
             blocknode* current = blockPage->firstBlock;
-            blocknode* previous = NULL;
+           // blocknode* previous = current;
 	    while (current!=NULL)
             {
                // printf(" %p (%p) -> ",current->ptr,current);
-		previous = current;
+	//	previous = current;
                 current = current->next;
             	count++;
 	    }
@@ -1017,7 +1017,7 @@ void addPageNode(void* ptr,void* pagePtr)
     	//printf("The last pagenode is at %p and the new one at %p \n",previousPageNode,newPageNode);
 	//printf("New page node points to data page %p \n",newPageNode->ptr);
     	//add to the page counter
-    	pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
+    	//pageheader* currentPage = (pageheader*)(((int)(newPageNode)>>13)<<13);
 	//printf("Address of page that holds the page node is %p \n",currentPage);
     	page->counter++;
         //printf("New page counter is at %d \n",currentPage->counter);

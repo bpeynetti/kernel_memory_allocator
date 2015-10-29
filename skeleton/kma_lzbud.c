@@ -168,7 +168,7 @@ void update_slack(kma_size_t size, int delta);
 int getSlack(kma_size_t size);
 bool isGloballyFree(void* ptr,kma_size_t size);
 void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize);
-
+void set_slack(kma_size_t size, int value);
 
 /************External Declaration*****************************************/
 
@@ -287,7 +287,7 @@ void kma_free(void* ptr, kma_size_t size)
         return;
   }
 
-  void* pagePtr = (void*)(findPagePtr(ptr));
+  //void* pagePtr = (void*)(findPagePtr(ptr));
 
 
   manageFreeSlack(ptr, size, size);
@@ -344,11 +344,11 @@ void free_pages()
 		flag = 0;
             pageheader* blockPage = (pageheader*)(page->ptrs[j]);
             blocknode* current = blockPage->firstBlock;
-            blocknode* previous = NULL;
+            //blocknode* previous = NULL;
 	    while (current!=NULL)
             {
                // printf(" %p (%p) -> ",current->ptr,current);
-		previous = current;
+	//	previous = current;
                 current = current->next;
             	count++;
 	    }
@@ -933,7 +933,7 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
     	{
         	//find the block's pagePtri
    	 printf("not from recursion, so find pointer and add to list \n");
-        	void* pagePtr = findPagePtr(ptr);
+        	//void* pagePtr = findPagePtr(ptr);
         	//add_to_list(ptr,size,pagePtr);
         //	int listIndex = getListIndex(size);
         //	pageheader* page = (pageheader*)(globalPtr->ptr);
@@ -1027,6 +1027,7 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
        	}
     	}
 	}
+	return NULL;
 }
 
 blocknode* findBlock(void* ptr, kma_size_t size)

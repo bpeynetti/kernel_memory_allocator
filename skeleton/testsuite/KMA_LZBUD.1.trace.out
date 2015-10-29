@@ -1,0 +1,144 @@
+./KMA_LZBUD: Running in correctness mode
+
+
+ REQUEST NUMBER 1 TO ALLOCATE BLOCK OF SIZE 35
+Adjusted size to: 64
+END OF INITIALIZING BOOK KEEPING -----------------
+
+RETURN ADDRESS (nil)
+adding page node for the page located at 0x401ec000 and pagePtr 0x8385f80 
+Page where we add the node is 0x401ea000 
+empty list starts at 0x401ea060 
+added page node at 0x401ea060 and pagePtr points to 0x8385f80 
+created new node at 0x401ee074 whose previous is 0x401ee060 and size is 16 so prev+16 =0x401ee070 
+removing node 0x401ee060 of size 4096 
+created new node at 0x401f0074 whose previous is 0x401f0060 and size is 16 so prev+16 =0x401f0070 
+removing node 0x401f0074 of size 2048 
+created new node at 0x401f2074 whose previous is 0x401f2060 and size is 16 so prev+16 =0x401f2070 
+removing node 0x401f2074 of size 1024 
+created new node at 0x401f4074 whose previous is 0x401f4060 and size is 16 so prev+16 =0x401f4070 
+removing node 0x401f4074 of size 512 
+created new node at 0x401f6074 whose previous is 0x401f6060 and size is 16 so prev+16 =0x401f6070 
+removing node 0x401f6074 of size 256 
+created new node at 0x401f8074 whose previous is 0x401f8060 and size is 16 so prev+16 =0x401f8070 
+removing node 0x401f8074 of size 128 
+created new node at 0x401fa074 whose previous is 0x401fa060 and size is 16 so prev+16 =0x401fa070 
+RETURN ADDRESS IS ----------------------->>>>>0x401fa074-> 0x401ec000
+removing node 0x401fa074 of size 64 
+should be scanning bitmap by page and deleting pages as needed
+Bitmap page at 0x401ea000 
+ Lists page at 0x401ea000 
+ Printing lists: 
+
+list: 0  COUNT: 0  and SLACK=0 
+
+list: 1  COUNT: 1  and SLACK=0 
+
+list: 2  COUNT: 1  and SLACK=0 
+
+list: 3  COUNT: 1  and SLACK=0 
+
+list: 4  COUNT: 1  and SLACK=0 
+
+list: 5  COUNT: 1  and SLACK=0 
+
+list: 6  COUNT: 1  and SLACK=0 
+
+list: 7  COUNT: 1  and SLACK=0 
+
+list: 8  COUNT: 0  and SLACK=0 
+some stuff left.. wait 
+size of node is 20 
+
+ REQUEST NUMBER 2 TO ALLOCATE BLOCK OF SIZE 243
+Adjusted size to: 256
+RETURN ADDRESS 0x401f6060
+RETURN ADDRESS IS ----------------------->>>>> 0x401ec100
+removing node 0x401f6060 of size 256 
+*** freeing page for lists of size 3
+should be scanning bitmap by page and deleting pages as needed
+Bitmap page at 0x401ea000 
+ Lists page at 0x401ea000 
+ Printing lists: 
+
+list: 0  COUNT: 0  and SLACK=0 
+
+list: 1  COUNT: 1  and SLACK=0 
+
+list: 2  COUNT: 1  and SLACK=0 
+
+list: 3  COUNT: 0  and SLACK=1 
+
+list: 4  COUNT: 1  and SLACK=0 
+
+list: 5  COUNT: 1  and SLACK=0 
+
+list: 6  COUNT: 1  and SLACK=0 
+
+list: 7  COUNT: 1  and SLACK=0 
+
+list: 8  COUNT: 0  and SLACK=0 
+some stuff left.. wait 
+size of node is 20 
+
+ REQUEST NUMBER 3 TO ALLOCATE BLOCK OF SIZE 13
+Adjusted size to: 32
+removing node 0x401fa060 of size 64 
+*** freeing page for lists of size 1
+created new node at 0x401fa074 whose previous is 0x401fa060 and size is 16 so prev+16 =0x401fa070 
+RETURN ADDRESS 0x401fa074
+RETURN ADDRESS IS ----------------------->>>>> 0x401ec040
+removing node 0x401fa074 of size 32 
+should be scanning bitmap by page and deleting pages as needed
+Bitmap page at 0x401ea000 
+ Lists page at 0x401ea000 
+ Printing lists: 
+
+list: 0  COUNT: 1  and SLACK=0 
+
+list: 1  COUNT: 0  and SLACK=0 
+
+list: 2  COUNT: 1  and SLACK=0 
+
+list: 3  COUNT: 0  and SLACK=1 
+
+list: 4  COUNT: 1  and SLACK=0 
+
+list: 5  COUNT: 1  and SLACK=0 
+
+list: 6  COUNT: 1  and SLACK=0 
+
+list: 7  COUNT: 1  and SLACK=0 
+
+list: 8  COUNT: 0  and SLACK=0 
+some stuff left.. wait 
+size of node is 20 
+
+ REQUEST NUMBER 4 TO ALLOCATE BLOCK OF SIZE 29
+Adjusted size to: 32
+RETURN ADDRESS 0x401fa060
+RETURN ADDRESS IS ----------------------->>>>> 0x401ec060
+removing node 0x401fa060 of size 32 
+*** freeing page for lists of size 0
+should be scanning bitmap by page and deleting pages as needed
+Bitmap page at 0x401ea000 
+ Lists page at 0x401ea000 
+ Printing lists: 
+
+list: 0  COUNT: 0  and SLACK=1 
+
+list: 1  COUNT: 0  and SLACK=0 
+
+list: 2  COUNT: 1  and SLACK=0 
+
+list: 3  COUNT: 0  and SLACK=1 
+
+list: 4  COUNT: 1  and SLACK=0 
+
+list: 5  COUNT: 1  and SLACK=0 
+
+list: 6  COUNT: 1  and SLACK=0 
+
+list: 7  COUNT: 1  and SLACK=0 
+
+list: 8  COUNT: 0  a
