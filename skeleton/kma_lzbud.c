@@ -204,6 +204,7 @@ void* kma_malloc(kma_size_t size)
 	    //found a free block, update the bitmap
 	    //update_slack(size,1);
         update_bitmap(rAddress,size);
+	free_pages();
         return rAddress;
     }
     
@@ -240,7 +241,7 @@ void* kma_malloc(kma_size_t size)
 		remove_from_list(returnAddress);
         update_bitmap(rAddress,size);  
 		//update_slack(size,1);
-
+	free_pages();
       return rAddress;
     }
     
@@ -335,6 +336,7 @@ void free_pages()
     for (j=0;j<9;j++)
     {
         //printf("\t %d -> %p -- %p| \n",j,page->ptrs[j],(int)(page->ptrs[j])+8192);
+	count=0;
         if (page->ptrs[j]!=NULL)
         {
 		count=0;
@@ -349,8 +351,9 @@ void free_pages()
                 current = current->next;
             	count++;
 	    }
-	    printf("\n COUNT: %d  - ends at %p \n",count,previous);
-        }
+	}
+	    printf("\nlist: %d  COUNT: %d  and SLACK=%d \n",j,count,getSlack((int)(32<<j)));
+        
     }
 	if (flag==1)
 	{
@@ -596,7 +599,7 @@ kma_size_t adjustSize(kma_size_t num)
 
 blocknode* split_free_to_size(kma_size_t size, blocknode* node)
 {
-    if (isGloballyFree((void*)node, node->size))
+    if (isGloballyFree((void*)node->ptr, node->size))
     {
         update_slack(node->size, 1);
     }
@@ -827,6 +830,7 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
       add_to_list(ptr,size,pagePtr);
       update_slack(size, -2);
   }
+/*
   else if (getSlack(size) == 1)
   {
       update_bitmap(ptr, size);
@@ -834,15 +838,17 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
       coalesce_blocks(ptr, size, 0);
       set_slack(size, 0);
   }
+*/
   else
   {
       update_bitmap(ptr, size);
-      add_to_list(ptr, size, pagePtr);
+      //add_to_list(ptr, size, pagePtr);
       int fromRecursion;
       if (size == origSize)
       {
           fromRecursion = 0;
-      }
+      	  add_to_list(ptr,size,pagePtr);
+	}
       else
       {
           fromRecursion = 1;
@@ -854,8 +860,27 @@ void manageFreeSlack(void* ptr, kma_size_t size, kma_size_t origSize)
       if (parentBlock != NULL)
       {
           //coalesce_blocks returns null only if you reach the page size or the next size up has an empty list
-          manageFreeSlack((void*)parentBlock, size * 2, origSize);
+          manageFreeSlack((void*)parentBlock->ptr, size * 2, origSize);
       }
+	//if slack is 0, try to coalesce the first one in the new list
+	if (getSlack(size)==0)
+	{
+		//try to coalesce the first block in the list index+1
+		pageheader* firstPage = (pageheader*)(globalPtr->ptr);
+		firstPage = firstPage->ptrs[getListIndex(size*2)];
+		if (firstPage!=NULL)
+		{
+			//coalesce on the first block
+			blocknode* victimBlock = firstPage->firstBlock;
+			blocknode* otherParentBlock = coalesce_blocks(victimBlock->ptr,size*2,fromRecursion);
+			//
+			if (otherParentBlock != NULL)
+			{
+				manageFreeSlack((void*)otherParentBlock->ptr,size*4,origSize*2);
+			}
+		}
+	}		
+
       set_slack(size, 0);
   }
 }
@@ -887,20 +912,22 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
    	 printf("not from recursion, so find pointer and add to list \n");
         	void* pagePtr = findPagePtr(ptr);
         	//add_to_list(ptr,size,pagePtr);
-        	int listIndex = getListIndex(size);
-        	pageheader* page = (pageheader*)(globalPtr->ptr);
-        	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
-       	return blockPage->firstBlock;
-    	}
+        //	int listIndex = getListIndex(size);
+        //	pageheader* page = (pageheader*)(globalPtr->ptr);
+        //	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+       	//return blockPage->firstBlock;
+    		return NULL;
+	}
     	else
     	{
    	 printf("from recursion, so do nothing \n");
    	 	//do nothing. block already in list
-        	int listIndex = getListIndex(size);
-        	pageheader* page = (pageheader*)(globalPtr->ptr);
-        	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
-       	return blockPage->firstBlock;
-    	}
+        //	int listIndex = getListIndex(size);
+        //	pageheader* page = (pageheader*)(globalPtr->ptr);
+        //	pageheader* blockPage = (pageheader*)(page->ptrs[listIndex]);
+       	//return blockPage->firstBlock;
+    		return NULL;
+	}
 	}
     
 	if (fBuddy==1)
@@ -912,7 +939,7 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
     printf("found buddy \n");
    	if (fromRecursion==0)
     	{
-   		  //blocknode* node = findBlock(ptr,size);
+   		 blocknode* node = findBlock(ptr,size);
         	//find the other
         	blocknode* buddy = findBlock(buddyAddr,size);
         	//    printf("buddy address is %p \n",buddy);
@@ -941,7 +968,7 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
             	blocknode* parentNode = add_to_list(lowerAddress, buddy->size*2, buddy->pagePtr);
             	//and remove previous ones from list
    	       	//remove only the buddy
-            	//remove_from_list(node);
+            	remove_from_list(node);
             	remove_from_list(buddy);
 
             	return parentNode;
@@ -962,7 +989,7 @@ blocknode* coalesce_blocks(void* ptr,kma_size_t size,int fromRecursion)
    	   	printf("820 \n");
 		remove_from_list(node);
    	   	remove_from_list(buddy);
-   	   	return;
+   	   	return NULL;
         	}
         	else {
             	void* lowerAddress = ptr;
